@@ -138,11 +138,12 @@ public class EnderChestEditor extends GuiBuilder {
             item.addUnsafeEnchantment(entry.getKey(), entry.getValue());
         }
 
-        inventory.setItem(itemSlot, item, p -> {
+        inventory.setItem(itemSlot, item, event -> {
+            Player clicker = (Player) event.getWhoClicked();
             switch (configName) {
                 case "save":
-                    KitsX.getEnderChestUtil().save(player, kitName);
-                    KitsMenu.openKitMenu(player).open(player);
+                    KitsX.getEnderChestUtil().save(clicker, kitName);
+                    KitsMenu.openKitMenu(clicker).open(clicker);
                     break;
                 case "reset":
                     for (int i = 0; i <= 26; i++) {
@@ -150,7 +151,7 @@ public class EnderChestEditor extends GuiBuilder {
                     }
                     break;
                 case "back":
-                    KitsMenu.openKitMenu(player).open(player);
+                    KitsMenu.openKitMenu(clicker).open(clicker);
                     break;
             }
         });

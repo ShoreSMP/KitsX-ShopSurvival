@@ -23,11 +23,9 @@ package dev.darkxx.kitsx.menus;
 
 import dev.darkxx.kitsx.KitsX;
 import dev.darkxx.kitsx.utils.config.MenuConfig;
-import dev.darkxx.utils.folia.FoliaUtils;
 import dev.darkxx.utils.menu.xmenu.GuiBuilder;
 import dev.darkxx.utils.menu.xmenu.ItemBuilderGUI;
 import dev.darkxx.utils.text.color.ColorizeText;
-import io.papermc.paper.threadedregions.scheduler.AsyncScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -84,22 +82,13 @@ public class AutoRekitMenu extends GuiBuilder {
 
         setToggleAutoRekitLore(toggleAutoRekit, player);
 
-        if (FoliaUtils.isFolia()) {
-            AsyncScheduler asyncScheduler = Bukkit.getAsyncScheduler();
-            inventory.setItem(slot, toggleAutoRekit, p -> asyncScheduler.runNow(KitsX.getInstance(), (ignored) -> {
-                KitsX.getAutoRekitUtil().toggle(player);
-                setToggleAutoRekitLore(toggleAutoRekit, player);
-                player.getOpenInventory().setItem(slot, toggleAutoRekit);
-                player.playSound(player.getLocation(), Sound.UI_LOOM_TAKE_RESULT, 1.0f, 1.0f);
-            }));
-        } else {
-            Bukkit.getScheduler().runTaskAsynchronously(KitsX.getInstance(), () -> {
-                KitsX.getAutoRekitUtil().toggle(player);
-                setToggleAutoRekitLore(toggleAutoRekit, player);
-                player.getOpenInventory().setItem(slot, toggleAutoRekit);
-                player.playSound(player.getLocation(), Sound.UI_LOOM_TAKE_RESULT, 1.0f, 1.0f);
-            });
-        }
+        inventory.setItem(slot, toggleAutoRekit, event -> Bukkit.getScheduler().runTaskAsynchronously(KitsX.getInstance(), () -> {
+            Player clicker = (Player) event.getWhoClicked();
+            KitsX.getAutoRekitUtil().toggle(clicker);
+            setToggleAutoRekitLore(toggleAutoRekit, clicker);
+            clicker.getOpenInventory().setItem(slot, toggleAutoRekit);
+            clicker.playSound(clicker.getLocation(), Sound.UI_LOOM_TAKE_RESULT, 1.0f, 1.0f);
+        }));
     }
 
     @SuppressWarnings("deprecation")
@@ -128,11 +117,12 @@ public class AutoRekitMenu extends GuiBuilder {
             int kitNumber = i + 1;
 
             ItemStack item = createItem("auto_rekit.kits", Material.END_CRYSTAL, kitNumber);
-            inventory.setItem(slot, item, p -> {
+            inventory.setItem(slot, item, event -> {
+                Player clicker = (Player) event.getWhoClicked();
                 String kitSelected = PLUGIN.getConfig().getString("messages.auto_rekit_kit_selected");
                 assert kitSelected != null;
-                player.sendMessage(ColorizeText.hex(kitSelected).replace("%kit%", String.valueOf(kitNumber)));
-                KitsX.getAutoRekitUtil().setKit(player, "Kit " + kitNumber);
+                clicker.sendMessage(ColorizeText.hex(kitSelected).replace("%kit%", String.valueOf(kitNumber)));
+                KitsX.getAutoRekitUtil().setKit(clicker, "Kit " + kitNumber);
             });
         }
     }

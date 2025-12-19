@@ -22,7 +22,6 @@
 package dev.darkxx.kitsx.listeners;
 
 import dev.darkxx.kitsx.KitsX;
-import dev.darkxx.utils.event.crystal.PlayerCrystalDeathEvent;
 import dev.darkxx.utils.text.color.ColorizeText;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -64,14 +63,4 @@ public class AutoRekitListener implements Listener {
         }
     }
 
-    @EventHandler
-    public void onCrystalDeath(@NotNull PlayerCrystalDeathEvent e) {
-        Player victim = e.victim();
-        Player attacker = victim.getKiller();
-        if (attacker != null) {
-            if (KitsX.getAutoRekitUtil().isEnabled(attacker)) {
-                load(attacker);
-            }
-        }
-    }
 }

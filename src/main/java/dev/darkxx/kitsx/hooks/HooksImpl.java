@@ -35,6 +35,10 @@ public class HooksImpl {
         ConsoleCommandSender log = Bukkit.getServer().getConsoleSender();
 
         for (SupportedPlugins supportedPlugin : SupportedPlugins.values()) {
+            if (!isHookEnabled(plugin, supportedPlugin)) {
+                log.sendMessage(ColorizeText.hex("&c&lKitsX &7› &fSkipping &#ff2e2e" + supportedPlugin.getName() + " &fbecause it is disabled in config."));
+                continue;
+            }
             if (isPluginEnabled(pm, supportedPlugin)) {
                 log.sendMessage(ColorizeText.hex("&c&lKitsX &7› &fFound &#ff2e2e" + supportedPlugin.getName() + "&f, Hooking into it"));
                 supportedPlugin.hook();
@@ -45,5 +49,14 @@ public class HooksImpl {
 
     private static boolean isPluginEnabled(@NotNull PluginManager pluginManager, @NotNull SupportedPlugins plugin) {
         return pluginManager.isPluginEnabled(plugin.getName());
+    }
+
+    private static boolean isHookEnabled(@NotNull JavaPlugin plugin, @NotNull SupportedPlugins supportedPlugin) {
+        switch (supportedPlugin) {
+            case SKRIPT:
+                return plugin.getConfig().getBoolean("hooks.skript", true);
+            default:
+                return true;
+        }
     }
 }

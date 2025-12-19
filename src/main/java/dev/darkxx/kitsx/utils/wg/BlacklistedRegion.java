@@ -21,8 +21,14 @@
 
 package dev.darkxx.kitsx.utils.wg;
 
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldguard.WorldGuard;
+import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldguard.protection.ApplicableRegionSet;
+import com.sk89q.worldguard.protection.regions.RegionContainer;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import dev.darkxx.kitsx.KitsX;
-import dev.darkxx.utils.worldguard.WorldGuardUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -32,12 +38,25 @@ public class BlacklistedRegion {
     public static boolean isInBlacklistedRegion(Player player) {
         List<String> blacklistedRegions = KitsX.getInstance().getConfig().getStringList("blacklisted_regions");
 
-        for (String region : blacklistedRegions) {
-            if (WorldGuardUtil.isinRegion(player, region)) {
+        WorldGuardPlugin wg = getWorldGuard();
+        if (wg == null) {
+            return false;
+        }
+
+        RegionContainer container = WorldGuard.getInstance().getPlatform().getRegionContainer();
+        ApplicableRegionSet set = container.createQuery().getApplicableRegions(BukkitAdapter.adapt(player.getLocation()));
+        for (ProtectedRegion region : set) {
+            if (blacklistedRegions.contains(region.getId())) {
                 return true;
             }
         }
-
         return false;
+    }
+
+    private static WorldGuardPlugin getWorldGuard() {
+        if (!Bukkit.getPluginManager().isPluginEnabled("WorldGuard")) {
+            return null;
+        }
+        return (WorldGuardPlugin) Bukkit.getPluginManager().getPlugin("WorldGuard");
     }
 }

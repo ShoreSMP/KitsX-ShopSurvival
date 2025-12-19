@@ -7,21 +7,30 @@ plugins {
 group = "dev.darkxx"
 version = "1.0.3"
 description = "KitsX"
-java.sourceCompatibility = JavaVersion.VERSION_17
+java.sourceCompatibility = JavaVersion.toVersion(23)
+java.targetCompatibility = JavaVersion.toVersion(23)
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(23))
+    }
+}
 
 repositories {
     mavenCentral()
     mavenLocal()
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://repo.skriptlang.org/releases")
+    maven("https://maven.enginehub.org/repo/")
+
 }
 
 dependencies {
-    implementation("dev.darkxx:xUtils:2.0.0")
     implementation("org.projectlombok:lombok:1.18.30")
 
-    compileOnly("io.papermc.paper:paper-api:1.20.6-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
     compileOnly("com.github.SkriptLang:Skript:dev37c")
+    compileOnly("com.sk89q.worldguard:worldguard-bukkit:7.0.9")
     annotationProcessor("org.projectlombok:lombok:1.18.30")
 }
 

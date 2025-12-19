@@ -140,11 +140,12 @@ public class KitEditorMenu extends GuiBuilder {
             item.addUnsafeEnchantment(entry.getKey(), entry.getValue());
         }
 
-        inventory.setItem(itemSlot, item, p -> {
+        inventory.setItem(itemSlot, item, event -> {
+            Player clicker = (Player) event.getWhoClicked();
             switch (configName) {
                 case "save":
-                    KitsX.getKitUtil().save(player, kitName);
-                    KitsMenu.openKitMenu(player).open(player);
+                    KitsX.getKitUtil().save(clicker, kitName);
+                    KitsMenu.openKitMenu(clicker).open(clicker);
                     break;
                 case "reset":
                     for (int i = 0; i <= 40; i++) {
@@ -152,13 +153,13 @@ public class KitEditorMenu extends GuiBuilder {
                     }
                     break;
                 case "importInventory":
-                    KitsX.getKitUtil().importInventory(player, inventory);
+                    KitsX.getKitUtil().importInventory(clicker, inventory);
                     break;
                 case "premadeKit":
-                    PremadeKitSelectorMenu.createGui(player).open(player);
+                    PremadeKitSelectorMenu.createGui(clicker).open(clicker);
                     break;
                 case "back":
-                    KitsMenu.openKitMenu(player).open(player);
+                    KitsMenu.openKitMenu(clicker).open(clicker);
                     break;
             }
         });

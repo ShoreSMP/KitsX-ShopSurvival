@@ -96,7 +96,10 @@ public class PremadeKitMenu extends GuiBuilder {
                     .flags(flags.toArray(new ItemFlag[0]))
                     .build();
 
-            inventory.setItem(slot, item, p -> KitsMenu.openKitMenu(player).open(player));
+            inventory.setItem(slot, item, event -> {
+                Player clicker = (Player) event.getWhoClicked();
+                KitsMenu.openKitMenu(clicker).open(clicker);
+            });
         }
     }
 }

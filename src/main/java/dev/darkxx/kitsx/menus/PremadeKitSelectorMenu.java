@@ -96,11 +96,12 @@ public class PremadeKitSelectorMenu {
 		for (String kitKey : kitItems.keySet()) {
 			int slot = (int) ConfigCache.get("premade_kit.kits." + kitKey + ".slot");
 			inventory.setItem(slot, kitItems.get(kitKey), event -> {
+				Player clicker = (Player) event.getWhoClicked();
 				if (event.isLeftClick()) {
-					KitsX.getPremadeKitUtil().load(player, kitKey);
-					player.closeInventory();
+					KitsX.getPremadeKitUtil().load(clicker, kitKey);
+					clicker.closeInventory();
 				} else if (event.isRightClick()) {
-					PremadeKitMenu.createGui(player, kitKey).open(player);
+					PremadeKitMenu.createGui(clicker, kitKey).open(clicker);
 				}
 			});
 		}
@@ -124,7 +125,10 @@ public class PremadeKitSelectorMenu {
 
 		int backSlot = (int) ConfigCache.get("premade_kit.back.slot");
 		ItemStack backButton = (ItemStack) ConfigCache.get("premade_kit.back.item");
-		inventory.setItem(backSlot, backButton, p -> KitsMenu.openKitMenu(player).open(player));
+		inventory.setItem(backSlot, backButton, event -> {
+			Player clicker = (Player) event.getWhoClicked();
+			KitsMenu.openKitMenu(clicker).open(clicker);
+		});
 
 		return inventory;
 	}

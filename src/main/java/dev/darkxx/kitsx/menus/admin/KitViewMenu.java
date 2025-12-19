@@ -66,7 +66,7 @@ public class KitViewMenu extends GuiBuilder {
                     .name(ColorizeText.mm("<#ff2e2e>Kit " + kitNumber))
                     .flags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS)
                     .build();
-            inventory.setItem(slot, back, p -> kit(executor, targetPlayerName, "Kit " + kitNumber));
+            inventory.setItem(slot, back, event -> kit((Player) event.getWhoClicked(), targetPlayerName, "Kit " + kitNumber));
         }
 
         for (int i = 0; i < slots1.size(); i++) {
@@ -77,7 +77,7 @@ public class KitViewMenu extends GuiBuilder {
                     .name(ColorizeText.mm("<#4561a3>Ender Chest " + kitNumber))
                     .flags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS)
                     .build();
-            inventory.setItem(slot, enderchest, p -> ec(executor, targetPlayerName, "Kit " + kitNumber));
+            inventory.setItem(slot, enderchest, event -> ec((Player) event.getWhoClicked(), targetPlayerName, "Kit " + kitNumber));
         }
 
         inventory.open(executor);
@@ -111,7 +111,7 @@ public class KitViewMenu extends GuiBuilder {
                 .name(ColorizeText.mm("<#ffa6a6>Back"))
                 .flags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS)
                 .build();
-        inventory.setItem(44, back, p -> openKitSelectMenu(executor, targetPlayerName));
+        inventory.setItem(44, back, event -> openKitSelectMenu((Player) event.getWhoClicked(), targetPlayerName));
 
         inventory.open(executor);
     }
@@ -144,7 +144,7 @@ public class KitViewMenu extends GuiBuilder {
                 .name(ColorizeText.mm("<#ffa6a6>Back"))
                 .flags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS)
                 .build();
-        inventory.setItem(35, back, p -> openKitSelectMenu(executor, targetPlayerName));
+        inventory.setItem(35, back, event -> openKitSelectMenu((Player) event.getWhoClicked(), targetPlayerName));
 
         inventory.open(executor);
     }

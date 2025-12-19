@@ -82,10 +82,6 @@ public final class KitsX extends PluginWrapper {
             autoRekitUtil = new AutoRekitUtil(configManager);
 
             Servers.server().getPluginManager().registerEvents(new AutoRekitListener(), this);
-            if (Versions.isHigherThanOrEqualTo("1.20.1")) {
-                AutoRekitAnchorListener autoRekitAnchorListener = new AutoRekitAnchorListener();
-                autoRekitAnchorListener.register(this);
-            }
         }
 
         new KitCommand(this);

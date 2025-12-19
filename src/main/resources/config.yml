@@ -5,6 +5,13 @@
 kits: 7
 auto_rekit: false
 
+hooks:
+  skript: true
+
+cooldowns:
+  # Accepts values like "5s", "2m", "1h30m", "1d2h15m". Set to "0" to disable.
+  kit_load: "5s"
+
 broadcast:
   kit_load: true
   kit_load_message: "&#7cff6e%player% loaded %kit%."
@@ -21,6 +28,7 @@ messages:
   blacklisted_region: "&#ffa6a6You cannot use this command here."
   kit_saved: "&#7cff6e%kit% saved successfully!"
   kit_loaded: "&#7cff6e%kit% loaded successfully!"
+  kit_load_cooldown: "&#ffa6a6Please wait %time% before loading another kit."
   enderchest_saved: "&#7cff6eEnder chest for %kit% saved successfully!"
   premade_kit_saved: "&#7cff6ePremade kit saved successfully!"
   premade_kit_loaded: "&#7cff6ePremade kit loaded successfully!"

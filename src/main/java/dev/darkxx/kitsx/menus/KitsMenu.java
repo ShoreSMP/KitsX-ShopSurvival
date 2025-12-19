@@ -205,16 +205,17 @@ public class KitsMenu extends GuiBuilder {
             item.addUnsafeEnchantment(entry.getKey(), entry.getValue());
         }
 
-        inventory.setItem(itemSlot, item, p -> {
+        inventory.setItem(itemSlot, item, event -> {
+            Player clicker = (Player) event.getWhoClicked();
             switch (configName) {
                 case "kits_menu.kitroom":
-                    KitRoomMenu.openKitRoom(player).open(player);
+                    KitRoomMenu.openKitRoom(clicker).open(clicker);
                     break;
                 case "kits_menu.clearinv":
-                    player.getInventory().clear();
+                    clicker.getInventory().clear();
                     break;
                 case "kits_menu.premadekit":
-                    PremadeKitSelectorMenu.createGui(player).open(player);
+                    PremadeKitSelectorMenu.createGui(clicker).open(clicker);
                     break;
             }
         });

@@ -44,6 +44,7 @@ public class KitUtil implements KitsAPI {
     private static ConfigManager configManager;
     private final Logger logger = Logger.getLogger(KitUtil.class.getName());
     private final Map<String, Long> lastBroadcastTime = new HashMap<>();
+    private final Map<UUID, Long> kitLoadCooldowns = new HashMap<>();
 
     public KitUtil(ConfigManager configManager) {
         KitUtil.configManager = configManager;
@@ -117,12 +118,30 @@ public class KitUtil implements KitsAPI {
     @Override
     @SuppressWarnings("deprecation")
     public void load(@NotNull Player player, String kitName) {
+        long cooldownMillis = resolveKitLoadCooldownMillis();
+        if (cooldownMillis > 0 && !player.hasPermission("kitsx.cooldown.bypass")) {
+            long now = System.currentTimeMillis();
+            long lastUse = kitLoadCooldowns.getOrDefault(player.getUniqueId(), 0L);
+            long elapsed = now - lastUse;
+
+            if (elapsed < cooldownMillis) {
+                long remainingMillis = cooldownMillis - elapsed;
+                String formatted = formatDuration(remainingMillis);
+                String cooldownMsg = KitsX.getInstance().getConfig().getString("messages.kit_load_cooldown");
+                if (cooldownMsg != null && !cooldownMsg.isEmpty()) {
+                    player.sendMessage(ColorizeText.hex(cooldownMsg.replace("%time%", formatted)));
+                }
+                return;
+            }
+        }
+
         String playerName = player.getUniqueId().toString();
         KitLoadEvent event = new KitLoadEvent(player, kitName);
         Bukkit.getServer().getPluginManager().callEvent(event);
 
         if (!event.isCancelled()) {
             if (configManager.contains("data/kits.yml", playerName + "." + kitName)) {
+                kitLoadCooldowns.put(player.getUniqueId(), System.currentTimeMillis());
                 for (int i = 0; i < 36; ++i) {
                     ItemStack item = configManager.getConfig("data/kits.yml").getItemStack(playerName + "." + kitName + ".inventory." + i);
                     player.getInventory().setItem(i, item);
@@ -161,6 +180,101 @@ public class KitUtil implements KitsAPI {
                 player.sendMessage(ColorizeText.hex("&#ffa6a6" + kitName + " is empty."));
             }
         }
+    }
+
+    public void resetCooldown(UUID uuid) {
+        kitLoadCooldowns.remove(uuid);
+    }
+
+    public void resetAllCooldowns() {
+        kitLoadCooldowns.clear();
+    }
+
+    private long resolveKitLoadCooldownMillis() {
+        String raw = KitsX.getInstance().getConfig().getString("cooldowns.kit_load", "0");
+        if (raw == null || raw.trim().isEmpty()) {
+            long legacySeconds = KitsX.getInstance().getConfig().getLong("cooldowns.kit_load_seconds", 0);
+            return legacySeconds <= 0 ? 0 : legacySeconds * 1000L;
+        }
+        String normalized = raw.trim();
+        long parsed = parseDurationMillis(normalized);
+        if (parsed > 0) {
+            return parsed;
+        }
+        if (parsed == 0 && normalized.matches("0+[smhd]?")) {
+            return 0;
+        }
+        long legacySeconds = KitsX.getInstance().getConfig().getLong("cooldowns.kit_load_seconds", 0);
+        return legacySeconds <= 0 ? 0 : legacySeconds * 1000L;
+    }
+
+    public static long parseDurationMillis(String input) {
+        long totalMillis = 0;
+        String working = input.toLowerCase(Locale.ENGLISH).replaceAll("\\s+", "");
+        int index = 0;
+        while (index < working.length()) {
+            int start = index;
+            while (index < working.length() && Character.isDigit(working.charAt(index))) {
+                index++;
+            }
+            if (start == index) {
+                return -1;
+            }
+            long value = Long.parseLong(working.substring(start, index));
+            if (index >= working.length()) {
+                totalMillis += value * 1000L;
+                break;
+            }
+            char unit = working.charAt(index++);
+            switch (unit) {
+                case 'd':
+                    totalMillis += value * 86_400_000L;
+                    break;
+                case 'h':
+                    totalMillis += value * 3_600_000L;
+                    break;
+                case 'm':
+                    totalMillis += value * 60_000L;
+                    break;
+                case 's':
+                    totalMillis += value * 1000L;
+                    break;
+                default:
+                    return -1;
+            }
+        }
+        return totalMillis;
+    }
+
+    public static String formatDuration(long millis) {
+        if (millis < 1000) {
+            return "1 second";
+        }
+
+        long totalSeconds = millis / 1000;
+        long days = totalSeconds / 86_400;
+        totalSeconds %= 86_400;
+        long hours = totalSeconds / 3_600;
+        totalSeconds %= 3_600;
+        long minutes = totalSeconds / 60;
+        long seconds = totalSeconds % 60;
+
+        List<String> parts = new ArrayList<>();
+        if (days > 0) {
+            parts.add(days + " day" + (days == 1 ? "" : "s"));
+        }
+        if (hours > 0) {
+            parts.add(hours + " hour" + (hours == 1 ? "" : "s"));
+        }
+        if (minutes > 0) {
+            parts.add(minutes + " minute" + (minutes == 1 ? "" : "s"));
+        }
+
+        if (parts.isEmpty()) {
+            parts.add(seconds + " second" + (seconds == 1 ? "" : "s"));
+        }
+
+        return String.join(" ", parts);
     }
 
     @Override

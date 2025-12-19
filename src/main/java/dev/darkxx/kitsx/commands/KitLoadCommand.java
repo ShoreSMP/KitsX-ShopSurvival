@@ -56,7 +56,7 @@ public class KitLoadCommand extends XyrisCommand<KitsX> {
             }
         }
 
-        int kits = getPlugin().getConfig().getInt("kits", 7);
+        int kits = plugin.getConfig().getInt("kits", 7);
 
         String cmdName = command.getName();
 

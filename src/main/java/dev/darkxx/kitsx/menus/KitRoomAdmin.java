@@ -54,16 +54,17 @@ public class KitRoomAdmin extends GuiBuilder {
                 .name(ColorizeText.mm("<green>Save"))
                 .flags(ItemFlag.HIDE_ATTRIBUTES)
                 .build();
-        inventory.setItem(48, save, p -> {
-            KitsX.getKitRoomUtil().save(player, category);
-            KitsMenu.openKitMenu(player).open(player);
+        inventory.setItem(48, save, event -> {
+            Player clicker = (Player) event.getWhoClicked();
+            KitsX.getKitRoomUtil().save(clicker, category);
+            KitsMenu.openKitMenu(clicker).open(clicker);
         });
 
         ItemStack reset = new ItemBuilderGUI(Material.RED_DYE)
                 .name(ColorizeText.mm("<red>Reset"))
                 .flags(ItemFlag.HIDE_ATTRIBUTES)
                 .build();
-        inventory.setItem(50, reset, p -> {
+        inventory.setItem(50, reset, event -> {
             for (int i1 = 0; i1 < 45; i1++) {
                 inventory.setItem(i1, new ItemStack(Material.AIR));
             }
@@ -73,7 +74,10 @@ public class KitRoomAdmin extends GuiBuilder {
                 .name(ColorizeText.mm("<#ffa6a6>Back"))
                 .flags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS)
                 .build();
-        inventory.setItem(49, back, p -> KitsMenu.openKitMenu(player).open(player));
+        inventory.setItem(49, back, event -> {
+            Player clicker = (Player) event.getWhoClicked();
+            KitsMenu.openKitMenu(clicker).open(clicker);
+        });
 
         inventory.addClickHandler(event -> {
             int slot = event.getRawSlot();

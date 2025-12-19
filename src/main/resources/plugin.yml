@@ -2,7 +2,7 @@ name: KitsX
 description: A modern kits plugin for the Crystal PvP server.
 main: dev.darkxx.kitsx.KitsX
 version: '1.0.3'
-api-version: '1.19'
+api-version: '1.21'
 website: https://xyris.fun/
 authors:
   - Darkxx
@@ -24,3 +24,6 @@ permissions:
     default: op
   kitsx.autokit:
     default: op
+  kitsx.cooldown.bypass:
+    default: op
+    description: Allows bypassing the kit load cooldown.
