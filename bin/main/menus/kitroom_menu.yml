@@ -1,0 +1,75 @@
+# Menu Configuration for the Kit room.
+
+# Inventory slots
+#
+#     0    1   2   3   4    5   6   7   8
+#     🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳   | Row 1
+#     9   10   11  12  13   14  15  16  17
+#     🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳   | Row 2
+#     18  19   20  21  22   23  24  25  26
+#     🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳   | Row 3
+#     27  28   29  30  31   32  33  34  35
+#     🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳   | Row 4
+#     36  37   38  39  40   41  42  43  44
+#     🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳   | Row 5
+#     45  46   47  48  49   50  51  52  53
+#     🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳   | Row 6
+
+
+# self-explanatory, no need for any external comments
+kit_room:
+  title: "Virtual Kit Room"
+
+  items:
+    filter:
+      material: BLACK_STAINED_GLASS_PANE
+      name: "&7 "
+      lore: [ ]
+      slots: [ 53 ]
+      enchanted: false
+
+    crystalpvp:
+      material: NETHERITE_SWORD
+      name: "&#ff2e2eCrystal PvP"
+      lore: [ ]
+      slot: 47
+      enchanted: true
+      category: "CRYSTAL_PVP"
+
+    potions:
+      material: BREWING_STAND
+      name: "&#ff2e2ePotions"
+      lore: [ ]
+      slot: 48
+      enchanted: false
+      category: "POTIONS"
+
+    bowsArrows:
+      material: SPECTRAL_ARROW
+      name: "&#ff2e2eBows & Arrows"
+      lore: [ ]
+      slot: 50
+      enchanted: false
+      category: "BOWS_ARROWS"
+
+    misc:
+      material: ENDER_PEARL
+      name: "&#ff2e2eMisc"
+      lore: [ ]
+      slot: 51
+      enchanted: false
+      category: "MISC"
+
+    back:
+      material: RED_STAINED_GLASS_PANE
+      name: "&#ffa6a6Back"
+      lore: [ ]
+      slot: 49
+      enchanted: false
+
+    refill:
+      material: BARREL
+      name: "&#ffa6a6Refill"
+      lore: [ ]
+      slot: 45
+      enchanted: false

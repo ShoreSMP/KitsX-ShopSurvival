@@ -1,0 +1,88 @@
+# Menu Configuration for the Premade Kit preview.
+
+# Inventory slots
+#
+#     0    1   2   3   4    5   6   7   8
+#     🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳   | Row 1
+#     9   10   11  12  13   14  15  16  17
+#     🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳   | Row 2
+#     18  19   20  21  22   23  24  25  26
+#     🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳   | Row 3
+#     27  28   29  30  31   32  33  34  35
+#     🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳   | Row 4
+#     36  37   38  39  40   41  42  43  44
+#     🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳   | Row 5
+#     45  46   47  48  49   50  51  52  53
+#     🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳   | Row 6
+
+
+# self-explanatory, no need for any external comments
+premade_kit:
+  title: "Premade Kits"
+  size: 54
+
+  filter:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+    slots: [ 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52 ]
+    flags:
+      - HIDE_ATTRIBUTES
+      - HIDE_ENCHANTS
+
+  back:
+    material: RED_STAINED_GLASS_PANE
+    name: "&#ffa6a6Back"
+    slot: 49
+    flags:
+      - HIDE_ATTRIBUTES
+
+  kits:
+    SMP:
+      material: DIAMOND_SWORD
+      slot: 19
+      name: "&aSMP"
+      lore:
+        - "&7Left click to load"
+        - "&7Right click to preview"
+      flags:
+        - HIDE_ATTRIBUTES
+
+    NetheritePot:
+      material: NETHERITE_HELMET
+      slot: 20
+      name: "&aNetherite Pot"
+      lore:
+        - "&7Left click to load"
+        - "&7Right click to preview"
+      flags:
+        - HIDE_ATTRIBUTES
+
+    Carts:
+      material: MINECART
+      slot: 21
+      name: "&aCarts"
+      lore:
+        - "&7Left click to load"
+        - "&7Right click to preview"
+      flags:
+        - HIDE_ATTRIBUTES
+
+    Mace:
+      material: IRON_AXE
+      slot: 22
+      name: "&aMace"
+      lore:
+        - "&7Left click to load"
+        - "&7Right click to preview"
+      flags:
+        - HIDE_ATTRIBUTES
+
+    UHC:
+      material: GOLDEN_APPLE
+      slot: 23
+      name: "&aUHC"
+      lore:
+        - "&7Left click to load"
+        - "&7Right click to preview"
+      flags:
+        - HIDE_ATTRIBUTES

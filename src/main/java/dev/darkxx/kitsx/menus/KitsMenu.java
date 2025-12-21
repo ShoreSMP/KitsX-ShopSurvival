@@ -23,6 +23,7 @@ package dev.darkxx.kitsx.menus;
 
 import dev.darkxx.kitsx.KitsX;
 import dev.darkxx.kitsx.utils.config.MenuConfig;
+import dev.darkxx.kitsx.utils.editor.KitEditorSessionManager;
 import dev.darkxx.utils.menu.xmenu.GuiBuilder;
 import dev.darkxx.utils.menu.xmenu.ItemBuilderGUI;
 import dev.darkxx.utils.text.color.ColorizeText;
@@ -36,8 +37,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 public class KitsMenu extends GuiBuilder {
@@ -56,16 +59,30 @@ public class KitsMenu extends GuiBuilder {
         String inventoryTitle = ColorizeText.hex(kitsTitle);
 
         GuiBuilder inventory = new GuiBuilder(inventorySize, inventoryTitle);
+        if (!KitEditorSessionManager.isEditing(player)) {
+            KitEditorSessionManager.startSession(player, "Kits", inventoryTitle, inventory);
+        } else {
+            KitEditorSessionManager.updateGui(player, inventory, inventoryTitle);
+        }
 
         if (CONFIG.getConfig().getBoolean("kits_menu.filter.enabled", true)) {
             addFilterItems(inventory);
         }
 
-        addKitItems(inventory, player);
-        addEnderChestItems(inventory, player);
+        Set<Integer> kitItemSlots = new HashSet<>();
+        addKitItems(inventory, player, kitItemSlots);
         addKitRoomItem(inventory, player);
         addClearInventoryItem(inventory, player);
         addPremadeKitItem(inventory, player);
+
+        inventory.addClickHandler(event -> {
+            if (!KitEditorSessionManager.isEditing(player)) {
+                return;
+            }
+            if (!kitItemSlots.contains(event.getRawSlot())) {
+                event.setCancelled(true);
+            }
+        });
 
         return inventory;
     }
@@ -94,15 +111,11 @@ public class KitsMenu extends GuiBuilder {
         }
     }
 
-    public static void addKitItems(GuiBuilder inventory, Player player) {
-        addItemGroup(inventory, "kits_menu.kits", Material.END_CRYSTAL, player);
+    public static void addKitItems(GuiBuilder inventory, Player player, Set<Integer> kitItemSlots) {
+        addItemGroup(inventory, "kits_menu.kits", Material.END_CRYSTAL, player, kitItemSlots);
     }
 
-    private static void addEnderChestItems(GuiBuilder inventory, Player player) {
-        addItemGroup(inventory, "kits_menu.enderchests", Material.ENDER_CHEST, player);
-    }
-
-    public static void addItemGroup(GuiBuilder inventory, String configPath, Material defaultMaterial, Player player) {
+    public static void addItemGroup(GuiBuilder inventory, String configPath, Material defaultMaterial, Player player, Set<Integer> kitItemSlots) {
         List<Integer> slots = CONFIG.getConfig().getIntegerList(configPath + ".slots");
 
         for (int i = 0; i < slots.size(); i++) {
@@ -132,18 +145,27 @@ public class KitsMenu extends GuiBuilder {
                     .flags(flags.toArray(new ItemFlag[0]))
                     .build();
 
+            if (!hasKitPermission(player, kitNumber, slots.size())) {
+                continue;
+            }
+            kitItemSlots.add(slot);
             inventory.setItem(slot, item, e -> {
                 if (e.isRightClick()) {
-                    if (configPath.equals("kits_menu.kits")) {
-                        KitEditorMenu.openKitEditor(player, "Kit " + kitNumber);
-                    } else {
-                        EnderChestEditor.openEnderChestEditor(player, "Kit " + kitNumber);
-                    }
+                    KitEditorMenu.openKitEditor(player, "Kit " + kitNumber);
                 } else if (e.isLeftClick()) {
                     KitsX.getKitUtil().load(player, "Kit " + kitNumber);
                 }
             });
         }
+    }
+
+    private static boolean hasKitPermission(Player player, int kitNumber, int totalKits) {
+        for (int permissionKit = kitNumber; permissionKit <= totalKits; permissionKit++) {
+            if (player.hasPermission("kits.kit" + permissionKit)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static void addKitRoomItem(GuiBuilder inventory, Player player) {

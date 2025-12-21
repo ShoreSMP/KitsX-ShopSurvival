@@ -26,6 +26,7 @@ import dev.darkxx.kitsx.api.KitsAPI;
 import dev.darkxx.kitsx.api.events.KitLoadEvent;
 import dev.darkxx.kitsx.api.events.KitSaveEvent;
 import dev.darkxx.kitsx.utils.config.ConfigManager;
+import dev.darkxx.kitsx.utils.editor.KitEditorSession;
 import dev.darkxx.utils.menu.xmenu.GuiBuilder;
 import dev.darkxx.utils.text.color.ColorizeText;
 import org.bukkit.Bukkit;
@@ -312,6 +313,10 @@ public class KitUtil implements KitsAPI {
         inventory.setItem(40, player.getInventory().getItemInOffHand());
     }
 
+    public void importFromSession(@NotNull GuiBuilder inventory, @NotNull KitEditorSession session) {
+        applySnapshot(inventory, session.getInventorySnapshot(), session.getArmorSnapshot(), session.getOffhandSnapshot());
+    }
+
     @Override
     public void delete(@NotNull Player player, String kitName) {
         String playerName = player.getUniqueId().toString();
@@ -338,5 +343,22 @@ public class KitUtil implements KitsAPI {
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to save kits file", e);
         }
+    }
+
+    private void applySnapshot(@NotNull GuiBuilder inventory, @NotNull ItemStack[] contents, @NotNull ItemStack[] armor, ItemStack offhand) {
+        for (int i = 0; i < Math.min(contents.length, 36); i++) {
+            inventory.setItem(i, cloneItem(contents[i]));
+        }
+        if (armor.length >= 4) {
+            inventory.setItem(36, cloneItem(armor[0]));
+            inventory.setItem(37, cloneItem(armor[1]));
+            inventory.setItem(38, cloneItem(armor[2]));
+            inventory.setItem(39, cloneItem(armor[3]));
+        }
+        inventory.setItem(40, cloneItem(offhand));
+    }
+
+    private ItemStack cloneItem(ItemStack stack) {
+        return stack == null ? null : stack.clone();
     }
 }

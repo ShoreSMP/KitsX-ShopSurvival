@@ -1,0 +1,42 @@
+# You can define the number of kits that a player can save here. By default, players will have permissions for all the kits,
+# but you can use a Permission Manager, such as LuckPerms, to set, for example, 'kitsx.kit7' to false for a player or a LuckPerms group,
+# and, They won't be able to load/use the Kit 7
+
+kits: 7
+auto_rekit: false
+
+hooks:
+  skript: true
+
+cooldowns:
+  # Accepts values like "5s", "2m", "1h30m", "1d2h15m". Set to "0" to disable.
+  kit_load: "5s"
+
+broadcast:
+  kit_load: true
+  kit_load_message: "&#7cff6e%player% loaded %kit%."
+  kit_load_message_delay: 20 # In ticks (20 ticks = 1 second)
+  kitroom_open: true
+  kitroom_open_message: "&#7cff6e%player% opened the Virtual Kit Room."
+  kitroom_open_message_delay: 20 # In ticks (20 ticks = 1 second)
+  premadekit_load: true
+  premadekit_load_message: "&#7cff6e%player% loaded the premade kit."
+  premadekit_load_message_delay: 20 # In ticks (20 ticks = 1 second)
+
+messages:
+  no_permission: "&#ffa6a6You do not have permission to use this command."
+  blacklisted_region: "&#ffa6a6You cannot use this command here."
+  kit_saved: "&#7cff6e%kit% saved successfully!"
+  kit_loaded: "&#7cff6e%kit% loaded successfully!"
+  kit_load_cooldown: "&#ffa6a6Please wait %time% before loading another kit."
+  enderchest_saved: "&#7cff6eEnder chest for %kit% saved successfully!"
+  premade_kit_saved: "&#7cff6ePremade kit saved successfully!"
+  premade_kit_loaded: "&#7cff6ePremade kit loaded successfully!"
+  premade_kit_empty: "&#ffa6a6The premade kit is empty."
+  auto_rekit_kit_selected: "&#7cff6eAuto Rekit kit set to %kit%."
+  send_auto_rekit_message: true
+  auto_rekit_message: "&#7cff6eAutomatically rekitted for you. Use /autorekit to toggle or edit the kit."
+
+blacklisted_regions:
+  - "arena1"
+  - "arena2"

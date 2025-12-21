@@ -1,4 +1,4 @@
-# Menu Configuration for /customkit (/k) menu.
+# Menu Configuration for /autorekit menu.
 
 # Inventory slots
 #
@@ -12,17 +12,36 @@
 #     🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳   | Row 4
 #     36  37   38  39  40   41  42  43  44
 #     🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳   | Row 5
+#     45  46   47  48  49   50  51  52  53
+#     🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳   | Row 6
+
 
 # self-explanatory, no need for any external comments
-kits_menu:
-  title: "Kits"
+auto_rekit:
+  title: "Auto Rekit"
   size: 45
 
+  placeholders:
+    enabled: "&#7cff6eEnabled"
+    disabled: "&#ff2e2eDisabled"
+
   filter:
-    enabled: true
+    enable: true
     material: BLACK_STAINED_GLASS_PANE
     name: " "
-    slots: [ 0-44 ]
+    slots: [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44 ]
+    flags:
+      - HIDE_ATTRIBUTES
+      - HIDE_ENCHANTS
+
+  toggle_auto_rekit:
+    material: NETHERITE_SWORD
+    name: "&#ff2e2eAuto Rekit"
+    slot: 13
+    lore:
+      - " "
+      - "&fStatus: %status%"
+      - " "
     flags:
       - HIDE_ATTRIBUTES
       - HIDE_ENCHANTS
@@ -30,47 +49,8 @@ kits_menu:
   kits:
     material: END_CRYSTAL
     name: "&#ff2e2eKit %kit%"
-    slots: [ 10, 11, 12, 13, 14, 15, 16 ]
-    lore:
-      - " "
-      - "&7Left click to load"
-      - "&7Right click to edit"
-      - " "
-      - "&7/k%i% - /kit%i%"
-    flags:
-      - HIDE_ATTRIBUTES
-      - HIDE_ENCHANTS
-
-  kitroom:
-    material: CREEPER_BANNER_PATTERN
-    name: "&#ff2e2eKit Room"
-    slot: 36
+    slots: [ 10, 19, 28, 16, 25, 34, 31 ]
     lore: [ ]
     flags:
       - HIDE_ATTRIBUTES
       - HIDE_ENCHANTS
-
-  clearinv:
-    material: RED_DYE
-    name: "&#ff2e2eClear Inventory"
-    slot: 40
-    lore: [ ]
-    flags:
-      - HIDE_ATTRIBUTES
-      - HIDE_ENCHANTS
-
-  premadekit:
-    material: NETHERITE_CHESTPLATE
-    name: "&#ff2e2ePremade Kit"
-    slot: 44
-    lore:
-      - " "
-      - "&7Left click to load"
-      - "&7Right click to preview"
-      - " "
-    flags:
-      - HIDE_ATTRIBUTES
-      - HIDE_ENCHANTS
-    enchantments:
-      - type: MENDING
-        level: 1

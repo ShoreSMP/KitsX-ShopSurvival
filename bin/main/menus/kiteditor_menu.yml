@@ -1,4 +1,4 @@
-# Menu Configuration for /customkit (/k) menu.
+# Menu Configuration for the Kit editor.
 
 # Inventory slots
 #
@@ -12,65 +12,64 @@
 #     🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳   | Row 4
 #     36  37   38  39  40   41  42  43  44
 #     🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳   | Row 5
+#     45  46   47  48  49   50  51  52  53
+#     🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳   | Row 6
+
 
 # self-explanatory, no need for any external comments
-kits_menu:
-  title: "Kits"
-  size: 45
+kit_editor:
+  size: 54
+  title: "Editing %kitName%"
 
   filter:
-    enabled: true
     material: BLACK_STAINED_GLASS_PANE
     name: " "
-    slots: [ 0-44 ]
+    slots: [ 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53 ]
     flags:
       - HIDE_ATTRIBUTES
       - HIDE_ENCHANTS
 
-  kits:
-    material: END_CRYSTAL
-    name: "&#ff2e2eKit %kit%"
-    slots: [ 10, 11, 12, 13, 14, 15, 16 ]
-    lore:
-      - " "
-      - "&7Left click to load"
-      - "&7Right click to edit"
-      - " "
-      - "&7/k%i% - /kit%i%"
-    flags:
-      - HIDE_ATTRIBUTES
-      - HIDE_ENCHANTS
-
-  kitroom:
-    material: CREEPER_BANNER_PATTERN
-    name: "&#ff2e2eKit Room"
-    slot: 36
+  save:
+    material: LIME_DYE
+    name: "&aSave"
+    slot: 46
     lore: [ ]
     flags:
       - HIDE_ATTRIBUTES
       - HIDE_ENCHANTS
 
-  clearinv:
+  reset:
     material: RED_DYE
-    name: "&#ff2e2eClear Inventory"
-    slot: 40
+    name: "&cReset"
+    slot: 48
     lore: [ ]
     flags:
       - HIDE_ATTRIBUTES
       - HIDE_ENCHANTS
 
-  premadekit:
-    material: NETHERITE_CHESTPLATE
-    name: "&#ff2e2ePremade Kit"
-    slot: 44
-    lore:
-      - " "
-      - "&7Left click to load"
-      - "&7Right click to preview"
-      - " "
+  importInventory:
+    material: CHEST
+    name: "&aImport Inventory"
+    slot: 50
+    lore: [ ]
     flags:
       - HIDE_ATTRIBUTES
       - HIDE_ENCHANTS
-    enchantments:
-      - type: MENDING
-        level: 1
+
+  premadeKit:
+    material: NETHERITE_CHESTPLATE
+    name: "&9Premade Kit"
+    slot: 52
+    lore: [ ]
+    flags:
+      - HIDE_ATTRIBUTES
+      - HIDE_ENCHANTS
+
+  back:
+    material: RED_STAINED_GLASS_PANE
+    name: "&#ffa6a6Back"
+    slot: 49
+    lore: [ ]
+    flags:
+      - HIDE_ATTRIBUTES
+      - HIDE_ENCHANTS

@@ -23,6 +23,8 @@ package dev.darkxx.kitsx.commands;
 
 import dev.darkxx.kitsx.KitsX;
 import dev.darkxx.kitsx.hooks.worldguard.WorldGuardHook;
+import dev.darkxx.kitsx.utils.editor.KitEditorSession;
+import dev.darkxx.kitsx.utils.editor.KitEditorSessionManager;
 import dev.darkxx.kitsx.utils.wg.BlacklistedRegion;
 import dev.darkxx.utils.command.XyrisCommand;
 import dev.darkxx.utils.text.color.ColorizeText;
@@ -54,6 +56,19 @@ public class KitLoadCommand extends XyrisCommand<KitsX> {
                 player.sendMessage(ColorizeText.hex(cannotUseHere));
                 return true;
             }
+        }
+
+        if (args.length > 0 && args[0].equalsIgnoreCase("import")) {
+            KitEditorSession session = KitEditorSessionManager.getSession(player);
+            if (session == null) {
+                player.sendMessage(ColorizeText.hex("&#ffa6a6You must be editing a kit to import items."));
+                return true;
+            }
+            KitsX.getKitUtil().importFromSession(session.getInventory(), session);
+            KitEditorSessionManager.endSession(player);
+            player.closeInventory();
+            player.sendMessage(ColorizeText.hex("&#7cff64Items imported into &#f0f0f0" + session.getKitName() + "&#7cff64."));
+            return true;
         }
 
         int kits = plugin.getConfig().getInt("kits", 7);

@@ -23,6 +23,8 @@ package dev.darkxx.kitsx.menus;
 
 import dev.darkxx.kitsx.KitsX;
 import dev.darkxx.kitsx.utils.config.MenuConfig;
+import dev.darkxx.kitsx.utils.editor.KitEditorSession;
+import dev.darkxx.kitsx.utils.editor.KitEditorSessionManager;
 import dev.darkxx.utils.menu.xmenu.GuiBuilder;
 import dev.darkxx.utils.menu.xmenu.ItemBuilderGUI;
 import dev.darkxx.utils.text.color.ColorizeText;
@@ -36,8 +38,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 public class KitEditorMenu extends GuiBuilder {
@@ -57,23 +61,26 @@ public class KitEditorMenu extends GuiBuilder {
         String inventoryTitle = ColorizeText.hex(titleTemplate.replace("%kitname%", kitName));
 
         GuiBuilder inventory = new GuiBuilder(inventorySize, inventoryTitle);
+        if (!KitEditorSessionManager.isEditing(player)) {
+            KitEditorSessionManager.startSession(player, kitName, inventoryTitle, inventory);
+        } else {
+            KitEditorSessionManager.updateSession(player, kitName, inventory, inventoryTitle);
+        }
 
         KitsX.getKitUtil().set(player, kitName, inventory);
 
-        addFilter(inventory, inventorySize);
-        addItems(inventory, player, kitName);
+        Set<Integer> blockedSlots = new HashSet<>();
+        addFilter(inventory, inventorySize, blockedSlots);
+        addItems(inventory, player, kitName, blockedSlots);
 
         inventory.addClickHandler(event -> {
-            int slot = event.getRawSlot();
-            if (slot >= 0 && slot <= 40) {
-                event.setCancelled(false);
-            }
+            event.setCancelled(blockedSlots.contains(event.getRawSlot()));
         });
 
         inventory.open(player);
     }
 
-    private static void addFilter(GuiBuilder inventory, int inventorySize) {
+    private static void addFilter(GuiBuilder inventory, int inventorySize, Set<Integer> blockedSlots) {
         for (int i = 1; i <= 4; i++) {
             int slot = i + (inventorySize - 14);
             ItemStack filter = new ItemBuilderGUI(Material.BLACK_STAINED_GLASS_PANE)
@@ -81,24 +88,30 @@ public class KitEditorMenu extends GuiBuilder {
                     .flags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS)
                     .build();
             inventory.setItem(slot, filter);
+            blockedSlots.add(slot);
             inventory.setItem(inventorySize - 9, filter);
+            blockedSlots.add(inventorySize - 9);
             inventory.setItem(inventorySize - 7, filter);
+            blockedSlots.add(inventorySize - 7);
             inventory.setItem(inventorySize - 6, filter);
+            blockedSlots.add(inventorySize - 6);
             inventory.setItem(inventorySize - 3, filter);
+            blockedSlots.add(inventorySize - 3);
             inventory.setItem(inventorySize - 1, filter);
+            blockedSlots.add(inventorySize - 1);
         }
     }
 
-    private static void addItems(GuiBuilder inventory, Player player, String kitName) {
-        addItem(inventory, "save", Material.LIME_DYE, inventory.getInventory().getSize() - 8, player, kitName);
-        addItem(inventory, "reset", Material.RED_DYE, inventory.getInventory().getSize() - 6, player, kitName);
-        addItem(inventory, "importInventory", Material.CHEST, inventory.getInventory().getSize() - 4, player, kitName);
-        addItem(inventory, "premadeKit", Material.NETHERITE_CHESTPLATE, inventory.getInventory().getSize() - 2, player, kitName);
-        addItem(inventory, "back", Material.RED_STAINED_GLASS_PANE, inventory.getInventory().getSize() - 5, player, kitName);
+    private static void addItems(GuiBuilder inventory, Player player, String kitName, Set<Integer> blockedSlots) {
+        addItem(inventory, "save", Material.LIME_DYE, inventory.getInventory().getSize() - 8, player, kitName, blockedSlots);
+        addItem(inventory, "reset", Material.RED_DYE, inventory.getInventory().getSize() - 6, player, kitName, blockedSlots);
+        addItem(inventory, "importInventory", Material.CHEST, inventory.getInventory().getSize() - 4, player, kitName, blockedSlots);
+        addItem(inventory, "premadeKit", Material.NETHERITE_CHESTPLATE, inventory.getInventory().getSize() - 2, player, kitName, blockedSlots);
+        addItem(inventory, "back", Material.RED_STAINED_GLASS_PANE, inventory.getInventory().getSize() - 5, player, kitName, blockedSlots);
     }
 
     @SuppressWarnings("deprecation")
-    private static void addItem(GuiBuilder inventory, String configName, @NotNull Material defaultMaterial, int defaultSlot, Player player, String kitName) {
+    private static void addItem(GuiBuilder inventory, String configName, @NotNull Material defaultMaterial, int defaultSlot, Player player, String kitName, Set<Integer> blockedSlots) {
         String itemMaterial = CONFIG.getConfig().getString("kit_editor." + configName + ".material", defaultMaterial.name());
         String itemName = CONFIG.getConfig().getString("kit_editor." + configName + ".name", "");
         int itemSlot = CONFIG.getConfig().getInt("kit_editor." + configName + ".slot", defaultSlot);
@@ -153,7 +166,14 @@ public class KitEditorMenu extends GuiBuilder {
                     }
                     break;
                 case "importInventory":
-                    KitsX.getKitUtil().importInventory(clicker, inventory);
+                    KitEditorSession session = KitEditorSessionManager.getSession(clicker);
+                    if (session != null) {
+                        KitsX.getKitUtil().importFromSession(session.getInventory(), session);
+                        KitEditorSessionManager.endSession(clicker);
+                        clicker.closeInventory();
+                    } else {
+                        KitsX.getKitUtil().importInventory(clicker, inventory);
+                    }
                     break;
                 case "premadeKit":
                     PremadeKitSelectorMenu.createGui(clicker).open(clicker);
@@ -163,5 +183,6 @@ public class KitEditorMenu extends GuiBuilder {
                     break;
             }
         });
+        blockedSlots.add(itemSlot);
     }
 }

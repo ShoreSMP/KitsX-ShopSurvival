@@ -85,6 +85,7 @@ public final class KitsX extends PluginWrapper {
         }
 
         new KitCommand(this);
+        new KitCancelCommand(this);
         new KitRoomAdminCommand(this);
         if (rekit())
             new AutoRekitCommand(this);
@@ -94,6 +95,8 @@ public final class KitsX extends PluginWrapper {
             new KitLoadCommand(this, "kit" + i, i);
         }
         new PremadeKitCommand(this);
+
+        Servers.server().getPluginManager().registerEvents(new KitEditorListener(), this);
 
         Metrics metrics = new Metrics(this, 22161);
         HooksImpl.of(this);

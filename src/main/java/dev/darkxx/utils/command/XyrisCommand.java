@@ -22,6 +22,7 @@ public abstract class XyrisCommand<T extends Plugin> implements CommandExecutor,
     private final Map<Integer, List<Suggestion>> tabCompletions = new HashMap<>();
     private String permission;
     private String usage = "";
+    private String fallbackPrefix;
 
     protected XyrisCommand(T plugin, String ignoredPrefix, String commandName) {
         this.plugin = plugin;
@@ -49,9 +50,8 @@ public abstract class XyrisCommand<T extends Plugin> implements CommandExecutor,
     // legacy signature with permission
     protected void addTabbComplete(int index, String permission, String[] ignored, String option) {
         tabCompletions.computeIfAbsent(index, k -> new ArrayList<>())
-                .add(new Suggestion(permission, Collections.singletonList(option)));
-    }
-
+            .add(new Suggestion(permission, Collections.singletonList(option)));
+        }
     protected void registerCommand() {
         try {
             PluginCommand cmd = create(commandName, plugin);
@@ -66,10 +66,15 @@ public abstract class XyrisCommand<T extends Plugin> implements CommandExecutor,
             }
             cmd.setExecutor(this);
             cmd.setTabCompleter(this);
-            getCommandMap().register(plugin.getName().toLowerCase(Locale.ENGLISH), cmd);
+            String fallback = fallbackPrefix != null ? fallbackPrefix : plugin.getName().toLowerCase(Locale.ENGLISH);
+            getCommandMap().register(fallback, cmd);
         } catch (Exception e) {
             plugin.getLogger().warning("Failed to register command: " + commandName + " - " + e.getMessage());
         }
+    }
+
+    protected void setFallbackPrefix(String fallbackPrefix) {
+        this.fallbackPrefix = fallbackPrefix;
     }
 
     private PluginCommand create(String name, Plugin plugin) throws Exception {

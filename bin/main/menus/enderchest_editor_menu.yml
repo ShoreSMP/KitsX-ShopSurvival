@@ -1,4 +1,4 @@
-# Menu Configuration for /customkit (/k) menu.
+# Menu Configuration for the Enderchest editor.
 
 # Inventory slots
 #
@@ -12,65 +12,49 @@
 #     🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳   | Row 4
 #     36  37   38  39  40   41  42  43  44
 #     🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳   | Row 5
+#     45  46   47  48  49   50  51  52  53
+#     🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳  🔳   | Row 6
+
 
 # self-explanatory, no need for any external comments
-kits_menu:
-  title: "Kits"
-  size: 45
+enderchest_editor:
+  size: 36
+  title: "Ender Chest | %kitname%"
 
   filter:
-    enabled: true
     material: BLACK_STAINED_GLASS_PANE
     name: " "
-    slots: [ 0-44 ]
+    slots: [ 27, 28, 29, 30, 31, 32, 33, 34, 35 ]
     flags:
       - HIDE_ATTRIBUTES
       - HIDE_ENCHANTS
 
-  kits:
-    material: END_CRYSTAL
-    name: "&#ff2e2eKit %kit%"
-    slots: [ 10, 11, 12, 13, 14, 15, 16 ]
-    lore:
-      - " "
-      - "&7Left click to load"
-      - "&7Right click to edit"
-      - " "
-      - "&7/k%i% - /kit%i%"
-    flags:
-      - HIDE_ATTRIBUTES
-      - HIDE_ENCHANTS
-
-  kitroom:
-    material: CREEPER_BANNER_PATTERN
-    name: "&#ff2e2eKit Room"
-    slot: 36
+  save:
+    material: LIME_DYE
+    name: "&aSave"
+    slot: 30
     lore: [ ]
     flags:
       - HIDE_ATTRIBUTES
       - HIDE_ENCHANTS
+    # enchantments:
+    #  - type: MENDING
+    #    level: 1
 
-  clearinv:
+  reset:
     material: RED_DYE
-    name: "&#ff2e2eClear Inventory"
-    slot: 40
+    name: "&cReset"
+    slot: 32
     lore: [ ]
     flags:
       - HIDE_ATTRIBUTES
       - HIDE_ENCHANTS
 
-  premadekit:
-    material: NETHERITE_CHESTPLATE
-    name: "&#ff2e2ePremade Kit"
-    slot: 44
-    lore:
-      - " "
-      - "&7Left click to load"
-      - "&7Right click to preview"
-      - " "
+  back:
+    material: RED_STAINED_GLASS_PANE
+    name: "&cBack"
+    slot: 31
+    lore: [ ]
     flags:
       - HIDE_ATTRIBUTES
       - HIDE_ENCHANTS
-    enchantments:
-      - type: MENDING
-        level: 1

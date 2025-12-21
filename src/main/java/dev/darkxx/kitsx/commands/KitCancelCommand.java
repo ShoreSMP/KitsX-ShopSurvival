@@ -22,9 +22,7 @@
 package dev.darkxx.kitsx.commands;
 
 import dev.darkxx.kitsx.KitsX;
-import dev.darkxx.kitsx.hooks.worldguard.WorldGuardHook;
-import dev.darkxx.kitsx.menus.KitsMenu;
-import dev.darkxx.kitsx.utils.wg.BlacklistedRegion;
+import dev.darkxx.kitsx.utils.editor.KitEditorSessionManager;
 import dev.darkxx.utils.command.XyrisCommand;
 import dev.darkxx.utils.text.color.ColorizeText;
 import org.bukkit.command.Command;
@@ -32,31 +30,30 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Objects;
+public class KitCancelCommand extends XyrisCommand<KitsX> {
 
-public class KitCommand extends XyrisCommand<KitsX> {
-
-    public KitCommand(KitsX plugin) {
-        super(plugin, "kitsx", "customkit");
+    public KitCancelCommand(KitsX plugin) {
+        super(plugin, "kitsx", "kitcancel");
+        setAliases("kc", "cancelkit");
         setUsage("");
         registerCommand();
     }
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {
-        if (sender instanceof Player player) {
-
-            if (WorldGuardHook.get().isEnabled()) {
-                if (BlacklistedRegion.isInBlacklistedRegion(player)) {
-                    String cannotUseHere = Objects.requireNonNull(KitsX.getInstance().getConfig().getString("messages.blacklisted_region"));
-                    player.sendMessage(ColorizeText.hex(cannotUseHere));
-                    return true;
-                }
-            }
-
-            KitsMenu.openKitMenu(player).open(player);
+    public boolean onCommand(@NotNull CommandSender sender,
+                             @NotNull Command command,
+                             @NotNull String label,
+                             @NotNull String[] args) {
+        if (!(sender instanceof Player player)) {
             return true;
         }
-        return false;
+        if (!KitEditorSessionManager.isEditing(player)) {
+            player.sendMessage(ColorizeText.hex("&#ffa6a6You are not editing a kit."));
+            return true;
+        }
+        KitEditorSessionManager.endSession(player);
+        player.closeInventory();
+        player.sendMessage(ColorizeText.hex("&#ff2e2eKit editing has been cancelled."));
+        return true;
     }
 }

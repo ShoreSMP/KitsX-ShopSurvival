@@ -24,6 +24,7 @@ package dev.darkxx.kitsx.menus;
 import dev.darkxx.kitsx.KitsX;
 import dev.darkxx.kitsx.utils.config.ConfigCache;
 import dev.darkxx.kitsx.utils.config.MenuConfig;
+import dev.darkxx.kitsx.utils.editor.KitEditorSessionManager;
 import dev.darkxx.utils.menu.xmenu.GuiBuilder;
 import dev.darkxx.utils.menu.xmenu.ItemBuilderGUI;
 import dev.darkxx.utils.text.color.ColorizeText;
@@ -129,6 +130,10 @@ public class PremadeKitSelectorMenu {
 			Player clicker = (Player) event.getWhoClicked();
 			KitsMenu.openKitMenu(clicker).open(clicker);
 		});
+
+		if (KitEditorSessionManager.isEditing(player)) {
+			KitEditorSessionManager.updateGui(player, inventory, title);
+		}
 
 		return inventory;
 	}
