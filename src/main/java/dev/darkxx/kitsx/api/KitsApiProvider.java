@@ -14,7 +14,6 @@ public class KitsApiProvider {
     private static KitsAPI kitsAPI;
     private static PremadeKitAPI premadeKitAPI;
     private static KitRoomAPI kitRoomAPI;
-    private static EnderChestAPI enderChestAPI;
     private static AutoRekitAPI autoRekitAPI;
 
     /**
@@ -28,7 +27,6 @@ public class KitsApiProvider {
         kitsAPI = new KitUtil(configManager);
         premadeKitAPI = new PremadeKitUtil(configManager);
         kitRoomAPI = new KitRoomUtil(configManager);
-        enderChestAPI = new EnderChestUtil(configManager);
         autoRekitAPI = new AutoRekitUtil(configManager);
     }
 
@@ -64,15 +62,6 @@ public class KitsApiProvider {
      */
     public KitRoomAPI getKitRoomAPI() {
         return kitRoomAPI;
-    }
-
-    /**
-     * Retrieves the Ender Chest API.
-     *
-     * @return An instance of EnderChestAPI.
-     */
-    public EnderChestAPI getEnderChestAPI() {
-        return enderChestAPI;
     }
 
     /**

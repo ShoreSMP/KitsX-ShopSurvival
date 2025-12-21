@@ -47,7 +47,6 @@ public class KitViewMenu extends GuiBuilder {
     public static void openKitSelectMenu(Player executor, String targetPlayerName) {
         GuiBuilder inventory = new GuiBuilder(36, targetPlayerName + " - " + "Kits");
         List<Integer> slots = CONFIG.getConfig().getIntegerList("kits_menu.kits.slots");
-        List<Integer> slots1 = CONFIG.getConfig().getIntegerList("kits_menu.enderchests.slots");
 
 
         for (int s = 0; s < inventory.getInventory().getSize(); s++) {
@@ -67,17 +66,6 @@ public class KitViewMenu extends GuiBuilder {
                     .flags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS)
                     .build();
             inventory.setItem(slot, back, event -> kit((Player) event.getWhoClicked(), targetPlayerName, "Kit " + kitNumber));
-        }
-
-        for (int i = 0; i < slots1.size(); i++) {
-            int slot = slots1.get(i);
-            int kitNumber = i + 1;
-
-            ItemStack enderchest = new ItemBuilderGUI(Material.ENDER_CHEST)
-                    .name(ColorizeText.mm("<#4561a3>Ender Chest " + kitNumber))
-                    .flags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS)
-                    .build();
-            inventory.setItem(slot, enderchest, event -> ec((Player) event.getWhoClicked(), targetPlayerName, "Kit " + kitNumber));
         }
 
         inventory.open(executor);
@@ -116,36 +104,4 @@ public class KitViewMenu extends GuiBuilder {
         inventory.open(executor);
     }
 
-    public static void ec(Player executor, String targetPlayerName, String kitName) {
-        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetPlayerName);
-        Player targetPlayer = Bukkit.getPlayerExact(targetPlayerName);
-        if (targetPlayer == null) {
-            return;
-        }
-
-        if (!offlinePlayer.isOnline()) {
-            executor.sendMessage(ColorizeText.mm("<&#ffa6a6>Player " + targetPlayerName + " is not online."));
-            return;
-        }
-
-        GuiBuilder inventory = new GuiBuilder(36, targetPlayerName + " - Ender Chest" + kitName);
-        KitsX.getEnderChestUtil().set(targetPlayer, kitName, inventory);
-
-        for (int i = 1; i <= 8; i++) {
-            int slot = i + 26;
-            ItemStack filter = new ItemBuilderGUI(Material.BLACK_STAINED_GLASS_PANE)
-                    .name(" ")
-                    .flags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS)
-                    .build();
-            inventory.setItem(slot, filter);
-        }
-
-        ItemStack back = new ItemBuilderGUI(Material.RED_STAINED_GLASS_PANE)
-                .name(ColorizeText.mm("<#ffa6a6>Back"))
-                .flags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS)
-                .build();
-        inventory.setItem(35, back, event -> openKitSelectMenu((Player) event.getWhoClicked(), targetPlayerName));
-
-        inventory.open(executor);
-    }
 }

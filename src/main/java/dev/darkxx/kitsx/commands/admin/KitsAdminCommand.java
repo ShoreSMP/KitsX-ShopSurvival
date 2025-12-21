@@ -93,7 +93,6 @@ public class KitsAdminCommand extends XyrisCommand<KitsX> {
                 }
                 String kitName = Stream.of(args).skip(2).collect(Collectors.joining(" "));
                 KitsX.getKitUtil().delete((Player) clearTarget, kitName);
-                KitsX.getEnderChestUtil().delete((Player) clearTarget, kitName);
                 executor.sendMessage(ColorizeText.hex("&#7cff6e" + kitName + " has been cleared for player " + clearTarget.getName() + "."));
                 break;
             case "cooldown":

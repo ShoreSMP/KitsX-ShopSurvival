@@ -29,6 +29,7 @@ import org.bukkit.inventory.PlayerInventory;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -62,6 +63,23 @@ public final class KitEditorSessionManager {
 
     public static boolean isEditing(@NotNull Player player) {
         return SESSIONS.containsKey(player.getUniqueId());
+    }
+
+    public static boolean isEditingKit(@NotNull Player player) {
+        KitEditorSession session = SESSIONS.get(player.getUniqueId());
+        return session != null && isNumericKitName(session.getKitName());
+    }
+
+    private static boolean isNumericKitName(String kitName) {
+        if (kitName == null) {
+            return false;
+        }
+        String lower = kitName.trim().toLowerCase(Locale.ENGLISH);
+        if (!lower.startsWith("kit ")) {
+            return false;
+        }
+        String suffix = lower.substring(4).trim();
+        return !suffix.isEmpty() && suffix.chars().allMatch(Character::isDigit);
     }
 
     public static KitEditorSession getSession(@NotNull Player player) {

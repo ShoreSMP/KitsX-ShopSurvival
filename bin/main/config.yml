@@ -14,7 +14,8 @@ cooldowns:
 
 broadcast:
   kit_load: true
-  kit_load_message: "&#7cff6e%player% loaded %kit%."
+  kit_load_message:
+    - "&#7cff6e%player% loaded %kit%."
   kit_load_message_delay: 20 # In ticks (20 ticks = 1 second)
   kitroom_open: true
   kitroom_open_message: "&#7cff6e%player% opened the Virtual Kit Room."
@@ -29,7 +30,6 @@ messages:
   kit_saved: "&#7cff6e%kit% saved successfully!"
   kit_loaded: "&#7cff6e%kit% loaded successfully!"
   kit_load_cooldown: "&#ffa6a6Please wait %time% before loading another kit."
-  enderchest_saved: "&#7cff6eEnder chest for %kit% saved successfully!"
   premade_kit_saved: "&#7cff6ePremade kit saved successfully!"
   premade_kit_loaded: "&#7cff6ePremade kit loaded successfully!"
   premade_kit_empty: "&#ffa6a6The premade kit is empty."

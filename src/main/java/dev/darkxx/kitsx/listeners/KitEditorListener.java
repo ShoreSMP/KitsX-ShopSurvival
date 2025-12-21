@@ -46,10 +46,52 @@ import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class KitEditorListener implements Listener {
 
     private static final double MAX_MOVE_DISTANCE_SQ = 1.0;
+    private static final String EDITING_BLOCKED_MESSAGE = "&#ffa6a6Editing a kit. Use /kitcancel or /k# import.";
+    private static final long EDITING_BLOCKED_MESSAGE_COOLDOWN_MS = 1500L;
+    private static final Map<UUID, Long> LAST_EDITING_BLOCKED_MESSAGE_AT = new ConcurrentHashMap<>();
+
+    private static void sendEditingBlockedMessage(Player player) {
+        long now = System.currentTimeMillis();
+        Long last = LAST_EDITING_BLOCKED_MESSAGE_AT.get(player.getUniqueId());
+        if (last != null && now - last < EDITING_BLOCKED_MESSAGE_COOLDOWN_MS) {
+            return;
+        }
+        LAST_EDITING_BLOCKED_MESSAGE_AT.put(player.getUniqueId(), now);
+        player.sendMessage(ColorizeText.hex(EDITING_BLOCKED_MESSAGE));
+    }
+
+    private static boolean isKitNumberCommand(String token) {
+        if (token == null || token.isEmpty()) {
+            return false;
+        }
+        String lower = token.toLowerCase(Locale.ENGLISH);
+        String digits;
+        if (lower.startsWith("k")) {
+            digits = lower.substring(1);
+        } else if (lower.startsWith("kit")) {
+            digits = lower.substring(3);
+        } else {
+            return false;
+        }
+        if (digits.isEmpty() || !digits.chars().allMatch(Character::isDigit)) {
+            return false;
+        }
+        int kitIndex;
+        try {
+            kitIndex = Integer.parseInt(digits);
+        } catch (NumberFormatException ignored) {
+            return false;
+        }
+        int maxKits = KitsX.getInstance().getConfig().getInt("kits", 7);
+        return kitIndex >= 1 && kitIndex <= maxKits;
+    }
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerMove(PlayerMoveEvent event) {
@@ -65,10 +107,12 @@ public final class KitEditorListener implements Listener {
         Location anchor = session.getAnchor();
         if (!anchor.getWorld().equals(to.getWorld())) {
             event.setTo(anchor);
+            sendEditingBlockedMessage(player);
             return;
         }
         if (to.distanceSquared(anchor) > MAX_MOVE_DISTANCE_SQ) {
             event.setTo(anchor);
+            sendEditingBlockedMessage(player);
         }
     }
 
@@ -98,20 +142,21 @@ public final class KitEditorListener implements Listener {
         if (primary.equals("kitsx") && second.equals("customkit")) {
             return;
         }
-        if ((primary.equals("k1") || primary.equals("kit1")) && second.equals("import")) {
+        if (isKitNumberCommand(primary) && second.equals("import")) {
             return;
         }
-        if (primary.equals("kitsx") && (second.equals("k1") || second.equals("kit1")) && third.equals("import")) {
+        if (primary.equals("kitsx") && isKitNumberCommand(second) && third.equals("import")) {
             return;
         }
         event.setCancelled(true);
-        player.sendMessage(ColorizeText.hex("&#ffa6a6You can only use /kitcancel or /k1 import while editing kits."));
+        player.sendMessage(ColorizeText.hex("&#ffa6a6You can only use /kitcancel or /k# import while editing kits."));
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onEntityPickup(EntityPickupItemEvent event) {
         if (event.getEntity() instanceof Player player && KitEditorSessionManager.isEditing(player)) {
             event.setCancelled(true);
+            sendEditingBlockedMessage(player);
         }
     }
 
@@ -119,6 +164,7 @@ public final class KitEditorListener implements Listener {
     public void onPlayerPickup(PlayerPickupItemEvent event) {
         if (KitEditorSessionManager.isEditing(event.getPlayer())) {
             event.setCancelled(true);
+            sendEditingBlockedMessage(event.getPlayer());
         }
     }
 
@@ -126,6 +172,7 @@ public final class KitEditorListener implements Listener {
     public void onPlayerDrop(PlayerDropItemEvent event) {
         if (KitEditorSessionManager.isEditing(event.getPlayer())) {
             event.setCancelled(true);
+            sendEditingBlockedMessage(event.getPlayer());
         }
     }
 
@@ -133,6 +180,7 @@ public final class KitEditorListener implements Listener {
     public void onEntityDamage(EntityDamageEvent event) {
         if (event.getEntity() instanceof Player player && KitEditorSessionManager.isEditing(player)) {
             event.setCancelled(true);
+            sendEditingBlockedMessage(player);
         }
     }
 
@@ -146,12 +194,14 @@ public final class KitEditorListener implements Listener {
             return;
         }
         event.setCancelled(true);
+        sendEditingBlockedMessage(player);
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
         if (KitEditorSessionManager.isEditing(event.getPlayer())) {
             event.setCancelled(true);
+            sendEditingBlockedMessage(event.getPlayer());
         }
     }
 
@@ -159,6 +209,7 @@ public final class KitEditorListener implements Listener {
     public void onArmorStandManipulate(PlayerArmorStandManipulateEvent event) {
         if (KitEditorSessionManager.isEditing(event.getPlayer())) {
             event.setCancelled(true);
+            sendEditingBlockedMessage(event.getPlayer());
         }
     }
 
@@ -166,11 +217,13 @@ public final class KitEditorListener implements Listener {
     public void onBlockPlace(BlockPlaceEvent event) {
         if (KitEditorSessionManager.isEditing(event.getPlayer())) {
             event.setCancelled(true);
+            sendEditingBlockedMessage(event.getPlayer());
         }
     }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
+        LAST_EDITING_BLOCKED_MESSAGE_AT.remove(event.getPlayer().getUniqueId());
         KitEditorSessionManager.endSession(event.getPlayer());
     }
 }

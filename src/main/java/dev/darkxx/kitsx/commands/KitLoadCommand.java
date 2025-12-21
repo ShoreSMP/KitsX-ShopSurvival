@@ -37,8 +37,11 @@ import java.util.Objects;
 
 public class KitLoadCommand extends XyrisCommand<KitsX> {
 
+    private final int kitIndex;
+
     public KitLoadCommand(KitsX plugin, String name, int kit) {
         super(plugin, "kitsx", name);
+        this.kitIndex = kit;
         setAliases("k" + kit);
         setUsage("");
         registerCommand();
@@ -61,13 +64,17 @@ public class KitLoadCommand extends XyrisCommand<KitsX> {
         if (args.length > 0 && args[0].equalsIgnoreCase("import")) {
             KitEditorSession session = KitEditorSessionManager.getSession(player);
             if (session == null) {
-                player.sendMessage(ColorizeText.hex("&#ffa6a6You must be editing a kit to import items."));
+                player.sendMessage(ColorizeText.hex("&#ffa6a6You must be in a kit edit session to use /k# import."));
                 return true;
             }
-            KitsX.getKitUtil().importFromSession(session.getInventory(), session);
+
+            org.bukkit.inventory.ItemStack[] invContents = player.getInventory().getStorageContents();
+            org.bukkit.inventory.ItemStack[] armorContents = player.getInventory().getArmorContents();
+            org.bukkit.inventory.ItemStack offhand = player.getInventory().getItemInOffHand();
+
+            KitsX.getKitUtil().saveSnapshot(player, "Kit " + kitIndex, invContents, armorContents, offhand);
             KitEditorSessionManager.endSession(player);
             player.closeInventory();
-            player.sendMessage(ColorizeText.hex("&#7cff64Items imported into &#f0f0f0" + session.getKitName() + "&#7cff64."));
             return true;
         }
 

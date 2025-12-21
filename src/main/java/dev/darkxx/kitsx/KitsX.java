@@ -47,8 +47,6 @@ public final class KitsX extends PluginWrapper {
     @Getter
     private static PremadeKitUtil premadeKitUtil;
     @Getter
-    private static EnderChestUtil enderChestUtil;
-    @Getter
     private static KitRoomUtil kitRoomUtil;
     @Getter
     private static AutoRekitUtil autoRekitUtil;
@@ -70,9 +68,6 @@ public final class KitsX extends PluginWrapper {
 
         PremadeKitUtil.of(this);
         premadeKitUtil = new PremadeKitUtil(configManager);
-
-        EnderChestUtil.of(this);
-        enderChestUtil =  new EnderChestUtil(configManager);
 
         KitRoomUtil.of(this);
         kitRoomUtil = new KitRoomUtil(configManager);
@@ -108,7 +103,6 @@ public final class KitsX extends PluginWrapper {
     @Override
     protected void stop() {
         getKitUtil().saveAll();
-        getEnderChestUtil().saveAll();
         getPremadeKitUtil().saveAll();
     }
 

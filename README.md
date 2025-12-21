@@ -1,4 +1,13 @@
-the best kits plugin for Crystal PvP servers
+KitsX Shop Survival (custom kit fork)
+
+This fork of KitsX centers on *custom kit editing sessions*. Players use `/customkit` to open a GUI that stores their temporary kit inventory while they flow between the kit room, premade kits, and the editor without losing progress.
+
+## Highlights
+
+- `/customkit` is the only exposed command, guiding players toward a shared GUI workflow instead of command spam.
+- Editing locks movement, container access, block placement, entity interactions, and armor-stand manipulation until the player either imports the kit or cancels with `/kitcancel`.
+- Only filter/back-button slots are blocked in the editor; kit slots stay editable so players can rearrange items freely while building a kit.
+- Premade kits, the kit room, and the editor all update one session, ensuring your kit snapshot persists between menus.
 
 ## Skript Support
 
@@ -46,6 +55,7 @@ dependencies {
     compileOnly("dev.darkxx:KitsX:1.0.0")
 }
 ```
+
 ---
 
 First, initialize the KitsApiProvider in the `onEnable`
@@ -75,7 +85,7 @@ Here are some usage examples:
     @EventHandler
     public void onKitLoad(KitLoadEvent event) {
         Player player = e.getPlayer();
-        String kitName = e.getKitName();
+        String kitName = event.getKitName();
         
         // Send the player a message if the kit name equals to "Kit 1"
         if (kitName.equals("Kit 1")) {

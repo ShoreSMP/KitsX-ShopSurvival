@@ -45,7 +45,6 @@ public class MenuConfig {
     public static void of(Plugin plugin) {
         new MenuConfig(plugin, "menus/kits_menu.yml");
         new MenuConfig(plugin, "menus/kiteditor_menu.yml");
-        new MenuConfig(plugin, "menus/enderchest_editor_menu.yml");
         new MenuConfig(plugin, "menus/autorekit_menu.yml");
         new MenuConfig(plugin, "menus/premadekit_menu.yml");
         new MenuConfig(plugin, "menus/premadekit_selector_menu.yml");

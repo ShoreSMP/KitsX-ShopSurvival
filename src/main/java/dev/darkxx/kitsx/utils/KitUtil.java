@@ -44,7 +44,7 @@ public class KitUtil implements KitsAPI {
 
     private static ConfigManager configManager;
     private final Logger logger = Logger.getLogger(KitUtil.class.getName());
-    private final Map<String, Long> lastBroadcastTime = new HashMap<>();
+    private final Map<UUID, Long> lastKitLoadBroadcastAt = new HashMap<>();
     private final Map<UUID, Long> kitLoadCooldowns = new HashMap<>();
 
     public KitUtil(ConfigManager configManager) {
@@ -116,6 +116,70 @@ public class KitUtil implements KitsAPI {
         }.runTaskAsynchronously(KitsX.getInstance());
     }
 
+    public void saveSnapshot(@NotNull Player player,
+                             @NotNull String kitName,
+                             @NotNull ItemStack[] inventoryContents,
+                             @NotNull ItemStack[] armorContents,
+                             ItemStack offhandItem) {
+        String playerName = player.getUniqueId().toString();
+
+        ItemStack[] invCopy = new ItemStack[36];
+        for (int i = 0; i < 36; i++) {
+            invCopy[i] = cloneItem(i < inventoryContents.length ? inventoryContents[i] : null);
+        }
+
+        ItemStack[] armorCopy = new ItemStack[4];
+        for (int i = 0; i < 4; i++) {
+            armorCopy[i] = cloneItem(i < armorContents.length ? armorContents[i] : null);
+        }
+
+        ItemStack offhandCopy = cloneItem(offhandItem);
+
+        KitSaveEvent event = new KitSaveEvent(player, kitName, invCopy, armorCopy, offhandCopy);
+        Bukkit.getServer().getPluginManager().callEvent(event);
+
+        if (event.isCancelled()) {
+            return;
+        }
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (exists(player, kitName)) {
+                    delete(player, kitName);
+                }
+                Map<String, Object> kitData = new HashMap<>();
+
+                for (int i = 0; i < 36; ++i) {
+                    kitData.put(playerName + "." + kitName + ".inventory." + i, invCopy[i]);
+                }
+                for (int i = 0; i < 4; ++i) {
+                    kitData.put(playerName + "." + kitName + ".armor." + i, armorCopy[i]);
+                }
+
+                kitData.put(playerName + "." + kitName + ".offhand", offhandCopy);
+
+                for (Map.Entry<String, Object> entry : kitData.entrySet()) {
+                    configManager.set("data/kits.yml", entry.getKey(), entry.getValue());
+                }
+
+                try {
+                    configManager.saveConfig("data/kits.yml");
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            String kitSaved = Objects.requireNonNull(KitsX.getInstance().getConfig().getString("messages.kit_saved"))
+                                    .replace("%kit%", kitName);
+                            player.sendMessage(ColorizeText.hex(kitSaved));
+                        }
+                    }.runTask(KitsX.getInstance());
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, "Failed to save kit: " + kitName, e);
+                }
+            }
+        }.runTaskAsynchronously(KitsX.getInstance());
+    }
+
     @Override
     @SuppressWarnings("deprecation")
     public void load(@NotNull Player player, String kitName) {
@@ -157,17 +221,29 @@ public class KitUtil implements KitsAPI {
                 player.getInventory().setItemInOffHand(offhandItem);
 
                 long currentTime = System.currentTimeMillis();
-                long lastTime = lastBroadcastTime.getOrDefault(playerName, 0L);
+                long lastTime = lastKitLoadBroadcastAt.getOrDefault(player.getUniqueId(), 0L);
                 long delayMillis = KitsX.getInstance().getConfig().getInt("broadcast.kit_load_message_delay", 10) * 50L;
 
                 if (KitsX.getInstance().getConfig().getBoolean("broadcast.kit_load", true) && (currentTime - lastTime > delayMillis)) {
-                    String bcastLoaded = KitsX.getInstance().getConfig().getString("broadcast.kit_load_message");
-                    if (bcastLoaded != null) {
-                        bcastLoaded = bcastLoaded.replace("%player%", player.getName()).replace("%kit%", kitName);
-                        Bukkit.broadcastMessage(ColorizeText.hex(bcastLoaded));
+                    List<String> lines = KitsX.getInstance().getConfig().getStringList("broadcast.kit_load_message");
+                    if (lines == null || lines.isEmpty()) {
+                        String raw = KitsX.getInstance().getConfig().getString("broadcast.kit_load_message");
+                        if (raw != null && !raw.isEmpty()) {
+                            raw = raw.replace("\\n", "\n");
+                            lines = Arrays.asList(raw.split("\\n", -1));
+                        }
                     }
 
-                    lastBroadcastTime.put(playerName, currentTime);
+                    if (lines != null && !lines.isEmpty()) {
+                        for (String line : lines) {
+                            if (line == null || line.isEmpty()) {
+                                continue;
+                            }
+                            String rendered = line.replace("%player%", player.getName()).replace("%kit%", kitName);
+                            Bukkit.broadcastMessage(ColorizeText.hex(rendered));
+                        }
+                        lastKitLoadBroadcastAt.put(player.getUniqueId(), currentTime);
+                    }
                 }
 
                 String kitLoaded = KitsX.getInstance().getConfig().getString("messages.kit_loaded");
@@ -176,7 +252,6 @@ public class KitUtil implements KitsAPI {
                     player.sendMessage(ColorizeText.hex(kitLoaded));
                 }
 
-                KitsX.getEnderChestUtil().load(player, kitName);
             } else {
                 player.sendMessage(ColorizeText.hex("&#ffa6a6" + kitName + " is empty."));
             }
