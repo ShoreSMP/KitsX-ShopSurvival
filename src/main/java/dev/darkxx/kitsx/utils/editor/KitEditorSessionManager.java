@@ -23,6 +23,7 @@ package dev.darkxx.kitsx.utils.editor;
 
 import dev.darkxx.utils.menu.xmenu.GuiBuilder;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -89,6 +90,7 @@ public final class KitEditorSessionManager {
     public static void endSession(@NotNull Player player) {
         KitEditorSession session = SESSIONS.remove(player.getUniqueId());
         if (session != null) {
+            player.setItemOnCursor(new ItemStack(Material.AIR));
             restorePlayerInventory(player.getInventory(), session);
         }
     }

@@ -27,9 +27,12 @@ import dev.darkxx.kitsx.utils.editor.KitEditorSessionManager;
 import dev.darkxx.utils.text.color.ColorizeText;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -119,7 +122,14 @@ public final class KitEditorListener implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onCommand(PlayerCommandPreprocessEvent event) {
         Player player = event.getPlayer();
-        if (KitEditorSessionManager.getSession(player) == null) {
+        KitEditorSession session = KitEditorSessionManager.getSession(player);
+        if (session == null) {
+            return;
+        }
+        InventoryHolder topHolder = player.getOpenInventory().getTopInventory().getHolder();
+        if (topHolder == session.getInventory()) {
+            event.setCancelled(true);
+            sendEditingBlockedMessage(player);
             return;
         }
         String message = event.getMessage().trim();
@@ -218,6 +228,20 @@ public final class KitEditorListener implements Listener {
         if (KitEditorSessionManager.isEditing(event.getPlayer())) {
             event.setCancelled(true);
             sendEditingBlockedMessage(event.getPlayer());
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onInventoryClose(InventoryCloseEvent event) {
+        if (!(event.getPlayer() instanceof Player player)) {
+            return;
+        }
+        if (!KitEditorSessionManager.isEditing(player)) {
+            return;
+        }
+        ItemStack cursor = player.getItemOnCursor();
+        if (cursor != null && cursor.getType() != Material.AIR) {
+            player.setItemOnCursor(new ItemStack(Material.AIR));
         }
     }
 
