@@ -3,12 +3,13 @@ package dev.darkxx.kitsx.utils;
 import dev.darkxx.kitsx.KitsX;
 import dev.darkxx.kitsx.api.PremadeKitAPI;
 import dev.darkxx.kitsx.utils.config.ConfigManager;
+import dev.darkxx.kitsx.utils.editor.KitEditorSession;
+import dev.darkxx.kitsx.utils.editor.KitEditorSessionManager;
 import dev.darkxx.utils.menu.xmenu.GuiBuilder;
 import dev.darkxx.utils.text.color.ColorizeText;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
@@ -33,14 +34,14 @@ public class PremadeKitUtil implements PremadeKitAPI {
     @Override
     public void save(Player player, String kitName) {
         try {
-            Inventory inventory = player.getInventory();
-            List<ItemStack> inventoryList = Arrays.asList(inventory.getContents());
-            List<ItemStack> armorList = Arrays.asList(player.getInventory().getArmorContents());
+            InventorySnapshot snapshot = InventorySnapshot.fromPlayer(player);
+            List<ItemStack> inventoryList = Arrays.asList(snapshot.getStorageContents());
+            List<ItemStack> armorList = Arrays.asList(snapshot.getArmorContents());
 
             ConfigurationSection kitSection = configManager.getConfig("data/premadekit.yml").createSection("kits." + kitName);
             kitSection.set("inventory", inventoryList);
             kitSection.set("armor", armorList);
-            kitSection.set("offhand", player.getInventory().getItemInOffHand());
+            kitSection.set("offhand", snapshot.getOffhandItem());
 
             configManager.saveConfig("data/premadekit.yml");
 
@@ -56,43 +57,23 @@ public class PremadeKitUtil implements PremadeKitAPI {
     @Override
     @SuppressWarnings("unchecked")
     public void set(GuiBuilder inventory, String kitName) {
-        ConfigurationSection kitSection = configManager.getConfig("data/premadekit.yml").getConfigurationSection("kits." + kitName);
-        if (kitSection != null) {
-            List<ItemStack> inventoryItems = (List<ItemStack>) kitSection.get("inventory");
-            List<ItemStack> armorItems = (List<ItemStack>) kitSection.get("armor");
-            ItemStack offhandItem = kitSection.getItemStack("offhand");
-
-            for (int i = 0; i < Objects.requireNonNull(inventoryItems).size(); i++) {
-                ItemStack item = inventoryItems.get(i);
-                if (item != null) {
-                    inventory.setItem(i, item);
-                }
-            }
-            for (int i = 0; i < Objects.requireNonNull(armorItems).size(); i++) {
-                ItemStack item = armorItems.get(i);
-                if (item != null) {
-                    inventory.setItem(i + 36, item);
-                }
-            }
-            if (offhandItem != null) {
-                inventory.setItem(40, offhandItem);
-            }
+        InventorySnapshot snapshot = getSnapshot(kitName);
+        if (snapshot != null) {
+            snapshot.applyToGui(inventory);
         }
     }
 
     @Override
     @SuppressWarnings({"unchecked", "deprecation"})
     public void load(Player player, String kitName) {
-        ConfigurationSection kitSection = configManager.getConfig("data/premadekit.yml").getConfigurationSection("kits." + kitName);
-        if (kitSection != null) {
-            player.getInventory().clear();
-            player.getInventory().setContents(((List<ItemStack>) Objects.requireNonNull(kitSection.get("inventory"))).toArray(new ItemStack[0]));
-            player.getInventory().setArmorContents(((List<ItemStack>) Objects.requireNonNull(kitSection.get("armor"))).toArray(new ItemStack[0]));
-            ItemStack offhandItem = kitSection.getItemStack("offhand");
-            if (offhandItem != null) {
-                player.getInventory().setItemInOffHand(offhandItem);
-            }
+        if (KitEditorSessionManager.isEditing(player)) {
+            loadIntoSession(player, kitName);
+            return;
+        }
 
+        InventorySnapshot snapshot = getSnapshot(kitName);
+        if (snapshot != null) {
+            snapshot.applyToPlayer(player);
             long currentTime = System.currentTimeMillis();
             String playerName = player.getUniqueId().toString();
             long lastTime = lastBroadcastTime.getOrDefault(playerName, 0L);
@@ -118,6 +99,62 @@ public class PremadeKitUtil implements PremadeKitAPI {
                 player.sendMessage(ColorizeText.hex(empty.replace("%kit%", kitName)));
             }
         }
+    }
+
+    public boolean loadIntoSession(Player player, String kitName) {
+        KitEditorSession session = KitEditorSessionManager.getSession(player);
+        if (session == null) {
+            return false;
+        }
+        if (!KitEditorSessionManager.isEditingKit(player)) {
+            player.sendMessage(ColorizeText.hex("&#ffa6a6Open a kit editor before importing a premade kit."));
+            return false;
+        }
+
+        InventorySnapshot snapshot = getSnapshot(kitName);
+        if (snapshot == null) {
+            String empty = KitsX.getInstance().getConfig().getString("messages.premade_kit_empty");
+            if (empty != null) {
+                player.sendMessage(ColorizeText.hex(empty.replace("%kit%", kitName)));
+            }
+            return false;
+        }
+
+        KitEditorSessionManager.setWorkingSnapshot(player, session.getKitName(), snapshot);
+        String loaded = KitsX.getInstance().getConfig().getString("messages.premade_kit_loaded");
+        if (loaded != null) {
+            player.sendMessage(ColorizeText.hex(loaded.replace("%kit%", kitName)));
+        }
+        return true;
+    }
+
+    @SuppressWarnings("unchecked")
+    private InventorySnapshot getSnapshot(String kitName) {
+        ConfigurationSection kitSection = configManager.getConfig("data/premadekit.yml").getConfigurationSection("kits." + kitName);
+        if (kitSection == null) {
+            return null;
+        }
+
+        List<ItemStack> inventoryItems = (List<ItemStack>) kitSection.get("inventory");
+        List<ItemStack> armorItems = (List<ItemStack>) kitSection.get("armor");
+        ItemStack[] storage = new ItemStack[InventorySnapshot.STORAGE_SIZE];
+        ItemStack[] armor = new ItemStack[InventorySnapshot.ARMOR_SIZE];
+
+        if (inventoryItems != null) {
+            for (int i = 0; i < Math.min(storage.length, inventoryItems.size()); i++) {
+                storage[i] = cloneItem(inventoryItems.get(i));
+            }
+        }
+        if (armorItems != null) {
+            for (int i = 0; i < Math.min(armor.length, armorItems.size()); i++) {
+                armor[i] = cloneItem(armorItems.get(i));
+            }
+        }
+        return InventorySnapshot.fromArrays(storage, armor, kitSection.getItemStack("offhand"));
+    }
+
+    private ItemStack cloneItem(ItemStack item) {
+        return item == null ? null : item.clone();
     }
 
     @Override

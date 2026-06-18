@@ -5,9 +5,12 @@ import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.Plugin;
 
@@ -41,7 +44,7 @@ public final class GuiManager implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL)
     public void onInventoryClick(InventoryClickEvent event) {
-        Inventory clicked = event.getInventory();
+        Inventory clicked = event.getView().getTopInventory();
         GuiBuilder builder = OPEN_INVENTORIES.get(clicked);
         if (builder == null) {
             return;
@@ -54,6 +57,17 @@ public final class GuiManager implements Listener {
         }
         for (Consumer<InventoryClickEvent> handler : builder.getGlobalHandlers()) {
             handler.accept(event);
+        }
+        if (!event.isCancelled() && !isSafeTopInventoryEdit(event)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
+    public void onInventoryDrag(InventoryDragEvent event) {
+        Inventory opened = event.getView().getTopInventory();
+        if (OPEN_INVENTORIES.containsKey(opened)) {
+            event.setCancelled(true);
         }
     }
 
@@ -77,5 +91,36 @@ public final class GuiManager implements Listener {
         for (Consumer<InventoryOpenEvent> handler : builder.getOpenHandlers()) {
             handler.accept(event);
         }
+    }
+
+    private boolean isSafeTopInventoryEdit(InventoryClickEvent event) {
+        int rawSlot = event.getRawSlot();
+        if (rawSlot < 0 || rawSlot >= event.getView().getTopInventory().getSize()) {
+            return false;
+        }
+
+        ClickType click = event.getClick();
+        if (click == ClickType.SHIFT_LEFT
+            || click == ClickType.SHIFT_RIGHT
+            || click == ClickType.NUMBER_KEY
+            || click == ClickType.SWAP_OFFHAND
+            || click == ClickType.DROP
+            || click == ClickType.CONTROL_DROP
+            || click == ClickType.DOUBLE_CLICK
+            || click == ClickType.MIDDLE
+            || click == ClickType.CREATIVE) {
+            return false;
+        }
+
+        InventoryAction action = event.getAction();
+        return action == InventoryAction.NOTHING
+            || action == InventoryAction.PICKUP_ALL
+            || action == InventoryAction.PICKUP_HALF
+            || action == InventoryAction.PICKUP_ONE
+            || action == InventoryAction.PICKUP_SOME
+            || action == InventoryAction.PLACE_ALL
+            || action == InventoryAction.PLACE_ONE
+            || action == InventoryAction.PLACE_SOME
+            || action == InventoryAction.SWAP_WITH_CURSOR;
     }
 }

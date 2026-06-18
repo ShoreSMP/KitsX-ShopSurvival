@@ -66,8 +66,8 @@ public class GuiBuilder implements InventoryHolder {
     }
 
     public void open(Player player) {
-        player.openInventory(inventory);
         GuiManager.track(inventory, this);
+        player.openInventory(inventory);
     }
 
     void handleClose(HumanEntity human) {

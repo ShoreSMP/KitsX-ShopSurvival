@@ -23,6 +23,7 @@ package dev.darkxx.kitsx.menus;
 
 import dev.darkxx.kitsx.KitsX;
 import dev.darkxx.kitsx.utils.config.MenuConfig;
+import dev.darkxx.kitsx.utils.editor.KitEditorSessionManager;
 import dev.darkxx.utils.menu.xmenu.GuiBuilder;
 import dev.darkxx.utils.menu.xmenu.ItemBuilderGUI;
 import dev.darkxx.utils.text.color.ColorizeText;
@@ -47,12 +48,16 @@ public class PremadeKitMenu extends GuiBuilder {
     }
 
     public static @NotNull GuiBuilder createGui(Player player, String kitName) {
-        GuiBuilder inventory = new GuiBuilder(CONFIG.getConfig().getInt("premade_kit.size"), ColorizeText.hex(Objects.requireNonNull(CONFIG.getConfig().getString("premade_kit.title"))));
+        String title = ColorizeText.hex(Objects.requireNonNull(CONFIG.getConfig().getString("premade_kit.title")));
+        GuiBuilder inventory = new GuiBuilder(CONFIG.getConfig().getInt("premade_kit.size"), title);
 
-       KitsX.getPremadeKitUtil().set(inventory, kitName);
+        KitsX.getPremadeKitUtil().set(inventory, kitName);
 
         addItems(inventory);
         addItem(inventory, player);
+        if (KitEditorSessionManager.isEditing(player)) {
+            KitEditorSessionManager.updateGui(player, inventory, title);
+        }
 
         return inventory;
     }

@@ -25,19 +25,21 @@ import dev.darkxx.kitsx.KitsX;
 import dev.darkxx.kitsx.utils.editor.KitEditorSession;
 import dev.darkxx.kitsx.utils.editor.KitEditorSessionManager;
 import dev.darkxx.utils.text.color.ColorizeText;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
+import org.bukkit.entity.TNTPrimed;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
@@ -47,6 +49,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.projectiles.ProjectileSource;
 
 import java.util.Locale;
 import java.util.Map;
@@ -126,12 +129,6 @@ public final class KitEditorListener implements Listener {
         if (session == null) {
             return;
         }
-        InventoryHolder topHolder = player.getOpenInventory().getTopInventory().getHolder();
-        if (topHolder == session.getInventory()) {
-            event.setCancelled(true);
-            sendEditingBlockedMessage(player);
-            return;
-        }
         String message = event.getMessage().trim();
         if (message.startsWith("/")) {
             message = message.substring(1);
@@ -186,7 +183,22 @@ public final class KitEditorListener implements Listener {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
+    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+        if (event.getEntity() instanceof Player victim && KitEditorSessionManager.isEditing(victim)) {
+            event.setCancelled(true);
+            sendEditingBlockedMessage(victim);
+            return;
+        }
+
+        Player attacker = resolveResponsiblePlayer(event.getDamager());
+        if (attacker != null && KitEditorSessionManager.isEditing(attacker)) {
+            event.setCancelled(true);
+            sendEditingBlockedMessage(attacker);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
     public void onEntityDamage(EntityDamageEvent event) {
         if (event.getEntity() instanceof Player player && KitEditorSessionManager.isEditing(player)) {
             event.setCancelled(true);
@@ -245,9 +257,37 @@ public final class KitEditorListener implements Listener {
         }
     }
 
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        Player player = event.getEntity();
+        if (!KitEditorSessionManager.isEditing(player)) {
+            return;
+        }
+        event.getDrops().clear();
+        event.setDroppedExp(0);
+        event.setKeepInventory(true);
+        event.setKeepLevel(true);
+        LAST_EDITING_BLOCKED_MESSAGE_AT.remove(player.getUniqueId());
+        KitEditorSessionManager.endSession(player);
+    }
+
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         LAST_EDITING_BLOCKED_MESSAGE_AT.remove(event.getPlayer().getUniqueId());
         KitEditorSessionManager.endSession(event.getPlayer());
+    }
+
+    private Player resolveResponsiblePlayer(org.bukkit.entity.Entity damager) {
+        if (damager instanceof Player player) {
+            return player;
+        }
+        if (damager instanceof Projectile projectile) {
+            ProjectileSource shooter = projectile.getShooter();
+            return shooter instanceof Player player ? player : null;
+        }
+        if (damager instanceof TNTPrimed tnt && tnt.getSource() instanceof Player player) {
+            return player;
+        }
+        return null;
     }
 }

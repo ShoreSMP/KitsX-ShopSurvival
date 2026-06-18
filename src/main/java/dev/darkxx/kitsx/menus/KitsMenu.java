@@ -153,7 +153,13 @@ public class KitsMenu extends GuiBuilder {
                 if (e.isRightClick()) {
                     KitEditorMenu.openKitEditor(player, "Kit " + kitNumber);
                 } else if (e.isLeftClick()) {
-                    KitsX.getKitUtil().load(player, "Kit " + kitNumber);
+                    if (KitEditorSessionManager.isEditing(player)) {
+                        if (KitsX.getKitUtil().loadIntoSession(player, "Kit " + kitNumber)) {
+                            KitEditorMenu.openKitEditor(player, "Kit " + kitNumber);
+                        }
+                    } else {
+                        KitsX.getKitUtil().load(player, "Kit " + kitNumber);
+                    }
                 }
             });
         }
@@ -234,7 +240,11 @@ public class KitsMenu extends GuiBuilder {
                     KitRoomMenu.openKitRoom(clicker).open(clicker);
                     break;
                 case "kits_menu.clearinv":
-                    clicker.getInventory().clear();
+                    if (KitEditorSessionManager.isEditing(clicker)) {
+                        clicker.setItemOnCursor(new ItemStack(Material.AIR));
+                    } else {
+                        clicker.getInventory().clear();
+                    }
                     break;
                 case "kits_menu.premadekit":
                     PremadeKitSelectorMenu.createGui(clicker).open(clicker);

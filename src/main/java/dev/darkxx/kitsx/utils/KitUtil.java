@@ -27,13 +27,13 @@ import dev.darkxx.kitsx.api.events.KitLoadEvent;
 import dev.darkxx.kitsx.api.events.KitSaveEvent;
 import dev.darkxx.kitsx.utils.config.ConfigManager;
 import dev.darkxx.kitsx.utils.editor.KitEditorSession;
+import dev.darkxx.kitsx.utils.editor.KitEditorSessionManager;
 import dev.darkxx.utils.menu.xmenu.GuiBuilder;
 import dev.darkxx.utils.text.color.ColorizeText;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -58,62 +58,8 @@ public class KitUtil implements KitsAPI {
 
     @Override
     public void save(@NotNull Player player, String kitName) {
-        String playerName = player.getUniqueId().toString();
-        ItemStack[] inventoryContents = new ItemStack[36];
-        for (int i = 0; i < 36; ++i) {
-            inventoryContents[i] = player.getOpenInventory().getTopInventory().getItem(i);
-        }
-
-        ItemStack[] armorContents = new ItemStack[4];
-        for (int i = 36; i < 40; ++i) {
-            armorContents[i - 36] = player.getOpenInventory().getTopInventory().getItem(i);
-        }
-
-        ItemStack offhandItem = player.getOpenInventory().getTopInventory().getItem(40);
-
-        KitSaveEvent event = new KitSaveEvent(player, kitName, inventoryContents, armorContents, offhandItem);
-        Bukkit.getServer().getPluginManager().callEvent(event);
-
-        if (event.isCancelled()) {
-            return;
-        }
-
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (exists(player, kitName)) {
-                    delete(player, kitName);
-                }
-                Map<String, Object> kitData = new HashMap<>();
-
-                for (int i = 0; i < 36; ++i) {
-                    kitData.put(playerName + "." + kitName + ".inventory." + i, inventoryContents[i]);
-                }
-                for (int i = 0; i < 4; ++i) {
-                    kitData.put(playerName + "." + kitName + ".armor." + i, armorContents[i]);
-                }
-
-                kitData.put(playerName + "." + kitName + ".offhand", offhandItem);
-
-                for (Map.Entry<String, Object> entry : kitData.entrySet()) {
-                    configManager.set("data/kits.yml", entry.getKey(), entry.getValue());
-                }
-
-                try {
-                    configManager.saveConfig("data/kits.yml");
-                    new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            String kitSaved = Objects.requireNonNull(KitsX.getInstance().getConfig().getString("messages.kit_saved"))
-                                    .replace("%kit%", kitName);
-                            player.sendMessage(ColorizeText.hex(kitSaved));
-                        }
-                    }.runTask(KitsX.getInstance());
-                } catch (Exception e) {
-                    logger.log(Level.SEVERE, "Failed to save kit: " + kitName, e);
-                }
-            }
-        }.runTaskAsynchronously(KitsX.getInstance());
+        InventorySnapshot snapshot = InventorySnapshot.fromInventory(player.getOpenInventory().getTopInventory());
+        saveSnapshot(player, kitName, snapshot.getStorageContents(), snapshot.getArmorContents(), snapshot.getOffhandItem());
     }
 
     public void saveSnapshot(@NotNull Player player,
@@ -141,48 +87,41 @@ public class KitUtil implements KitsAPI {
         if (event.isCancelled()) {
             return;
         }
+        configManager.set("data/kits.yml", playerName + "." + kitName, null);
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (exists(player, kitName)) {
-                    delete(player, kitName);
-                }
-                Map<String, Object> kitData = new HashMap<>();
+        Map<String, Object> kitData = new HashMap<>();
+        for (int i = 0; i < 36; ++i) {
+            kitData.put(playerName + "." + kitName + ".inventory." + i,
+                cloneItem(i < event.getInventoryContents().length ? event.getInventoryContents()[i] : null));
+        }
+        for (int i = 0; i < 4; ++i) {
+            kitData.put(playerName + "." + kitName + ".armor." + i,
+                cloneItem(i < event.getArmorContents().length ? event.getArmorContents()[i] : null));
+        }
+        kitData.put(playerName + "." + kitName + ".offhand", cloneItem(event.getOffhandItem()));
 
-                for (int i = 0; i < 36; ++i) {
-                    kitData.put(playerName + "." + kitName + ".inventory." + i, invCopy[i]);
-                }
-                for (int i = 0; i < 4; ++i) {
-                    kitData.put(playerName + "." + kitName + ".armor." + i, armorCopy[i]);
-                }
+        for (Map.Entry<String, Object> entry : kitData.entrySet()) {
+            configManager.set("data/kits.yml", entry.getKey(), entry.getValue());
+        }
 
-                kitData.put(playerName + "." + kitName + ".offhand", offhandCopy);
-
-                for (Map.Entry<String, Object> entry : kitData.entrySet()) {
-                    configManager.set("data/kits.yml", entry.getKey(), entry.getValue());
-                }
-
-                try {
-                    configManager.saveConfig("data/kits.yml");
-                    new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            String kitSaved = Objects.requireNonNull(KitsX.getInstance().getConfig().getString("messages.kit_saved"))
-                                    .replace("%kit%", kitName);
-                            player.sendMessage(ColorizeText.hex(kitSaved));
-                        }
-                    }.runTask(KitsX.getInstance());
-                } catch (Exception e) {
-                    logger.log(Level.SEVERE, "Failed to save kit: " + kitName, e);
-                }
-            }
-        }.runTaskAsynchronously(KitsX.getInstance());
+        try {
+            configManager.saveConfig("data/kits.yml");
+            String kitSaved = Objects.requireNonNull(KitsX.getInstance().getConfig().getString("messages.kit_saved"))
+                    .replace("%kit%", kitName);
+            player.sendMessage(ColorizeText.hex(kitSaved));
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Failed to save kit: " + kitName, e);
+        }
     }
 
     @Override
     @SuppressWarnings("deprecation")
     public void load(@NotNull Player player, String kitName) {
+        if (KitEditorSessionManager.isEditing(player)) {
+            loadIntoSession(player, kitName);
+            return;
+        }
+
         long cooldownMillis = resolveKitLoadCooldownMillis();
         if (cooldownMillis > 0 && !player.hasPermission("kitsx.cooldown.bypass")) {
             long now = System.currentTimeMillis();
@@ -200,61 +139,92 @@ public class KitUtil implements KitsAPI {
             }
         }
 
-        String playerName = player.getUniqueId().toString();
         KitLoadEvent event = new KitLoadEvent(player, kitName);
         Bukkit.getServer().getPluginManager().callEvent(event);
 
         if (!event.isCancelled()) {
-            if (configManager.contains("data/kits.yml", playerName + "." + kitName)) {
+            InventorySnapshot snapshot = getSnapshot(player, kitName);
+            if (snapshot != null) {
                 kitLoadCooldowns.put(player.getUniqueId(), System.currentTimeMillis());
-                for (int i = 0; i < 36; ++i) {
-                    ItemStack item = configManager.getConfig("data/kits.yml").getItemStack(playerName + "." + kitName + ".inventory." + i);
-                    player.getInventory().setItem(i, item);
-                }
-
-                for (int i = 0; i < 4; ++i) {
-                    ItemStack item = configManager.getConfig("data/kits.yml").getItemStack(playerName + "." + kitName + ".armor." + i);
-                    player.getInventory().setItem(36 + i, item);
-                }
-
-                ItemStack offhandItem = configManager.getConfig("data/kits.yml").getItemStack(playerName + "." + kitName + ".offhand");
-                player.getInventory().setItemInOffHand(offhandItem);
-
-                long currentTime = System.currentTimeMillis();
-                long lastTime = lastKitLoadBroadcastAt.getOrDefault(player.getUniqueId(), 0L);
-                long delayMillis = KitsX.getInstance().getConfig().getInt("broadcast.kit_load_message_delay", 10) * 50L;
-
-                if (KitsX.getInstance().getConfig().getBoolean("broadcast.kit_load", true) && (currentTime - lastTime > delayMillis)) {
-                    List<String> lines = KitsX.getInstance().getConfig().getStringList("broadcast.kit_load_message");
-                    if (lines == null || lines.isEmpty()) {
-                        String raw = KitsX.getInstance().getConfig().getString("broadcast.kit_load_message");
-                        if (raw != null && !raw.isEmpty()) {
-                            raw = raw.replace("\\n", "\n");
-                            lines = Arrays.asList(raw.split("\\n", -1));
-                        }
-                    }
-
-                    if (lines != null && !lines.isEmpty()) {
-                        for (String line : lines) {
-                            if (line == null || line.isEmpty()) {
-                                continue;
-                            }
-                            String rendered = line.replace("%player%", player.getName()).replace("%kit%", kitName);
-                            Bukkit.broadcastMessage(ColorizeText.hex(rendered));
-                        }
-                        lastKitLoadBroadcastAt.put(player.getUniqueId(), currentTime);
-                    }
-                }
-
-                String kitLoaded = KitsX.getInstance().getConfig().getString("messages.kit_loaded");
-                if (kitLoaded != null) {
-                    kitLoaded = kitLoaded.replace("%kit%", kitName);
-                    player.sendMessage(ColorizeText.hex(kitLoaded));
-                }
-
+                snapshot.applyToPlayer(player);
+                sendKitLoadBroadcast(player, kitName);
+                sendKitLoadedMessage(player, kitName);
             } else {
                 player.sendMessage(ColorizeText.hex("&#ffa6a6" + kitName + " is empty."));
             }
+        }
+    }
+
+    public boolean loadIntoSession(@NotNull Player player, @NotNull String kitName) {
+        InventorySnapshot snapshot = getSnapshot(player, kitName);
+        if (snapshot == null) {
+            player.sendMessage(ColorizeText.hex("&#ffa6a6" + kitName + " is empty."));
+            return false;
+        }
+        KitEditorSessionManager.setWorkingSnapshot(player, kitName, snapshot);
+        sendKitLoadedMessage(player, kitName);
+        return true;
+    }
+
+    private InventorySnapshot getSnapshot(@NotNull Player player, @NotNull String kitName) {
+        String playerName = player.getUniqueId().toString();
+        if (!configManager.contains("data/kits.yml", playerName + "." + kitName)) {
+            return null;
+        }
+
+        ItemStack[] inventoryContents = new ItemStack[36];
+        for (int i = 0; i < 36; ++i) {
+            inventoryContents[i] = configManager.getConfig("data/kits.yml")
+                .getItemStack(playerName + "." + kitName + ".inventory." + i);
+        }
+
+        ItemStack[] armorContents = new ItemStack[4];
+        for (int i = 0; i < 4; ++i) {
+            armorContents[i] = configManager.getConfig("data/kits.yml")
+                .getItemStack(playerName + "." + kitName + ".armor." + i);
+        }
+
+        ItemStack offhandItem = configManager.getConfig("data/kits.yml")
+            .getItemStack(playerName + "." + kitName + ".offhand");
+        return InventorySnapshot.fromArrays(inventoryContents, armorContents, offhandItem);
+    }
+
+    private void sendKitLoadBroadcast(@NotNull Player player, @NotNull String kitName) {
+        long currentTime = System.currentTimeMillis();
+        long lastTime = lastKitLoadBroadcastAt.getOrDefault(player.getUniqueId(), 0L);
+        long delayMillis = KitsX.getInstance().getConfig().getInt("broadcast.kit_load_message_delay", 10) * 50L;
+
+        if (!KitsX.getInstance().getConfig().getBoolean("broadcast.kit_load", true) || currentTime - lastTime <= delayMillis) {
+            return;
+        }
+
+        List<String> lines = KitsX.getInstance().getConfig().getStringList("broadcast.kit_load_message");
+        if (lines == null || lines.isEmpty()) {
+            String raw = KitsX.getInstance().getConfig().getString("broadcast.kit_load_message");
+            if (raw != null && !raw.isEmpty()) {
+                raw = raw.replace("\\n", "\n");
+                lines = Arrays.asList(raw.split("\\n", -1));
+            }
+        }
+
+        if (lines == null || lines.isEmpty()) {
+            return;
+        }
+
+        for (String line : lines) {
+            if (line == null || line.isEmpty()) {
+                continue;
+            }
+            String rendered = line.replace("%player%", player.getName()).replace("%kit%", kitName);
+            Bukkit.broadcastMessage(ColorizeText.hex(rendered));
+        }
+        lastKitLoadBroadcastAt.put(player.getUniqueId(), currentTime);
+    }
+
+    private void sendKitLoadedMessage(@NotNull Player player, @NotNull String kitName) {
+        String kitLoaded = KitsX.getInstance().getConfig().getString("messages.kit_loaded");
+        if (kitLoaded != null) {
+            player.sendMessage(ColorizeText.hex(kitLoaded.replace("%kit%", kitName)));
         }
     }
 
@@ -355,41 +325,20 @@ public class KitUtil implements KitsAPI {
 
     @Override
     public void set(@NotNull Player player, String kitName, GuiBuilder inventory) {
-        String playerName = player.getUniqueId().toString();
-        if (configManager.contains("data/kits.yml", playerName + "." + kitName)) {
-            for (int i = 0; i < 36; ++i) {
-                ItemStack item = configManager.getConfig("data/kits.yml").getItemStack(playerName + "." + kitName + ".inventory." + i);
-                inventory.setItem(i, item);
-            }
-
-            for (int i = 0; i < 4; ++i) {
-                ItemStack item = configManager.getConfig("data/kits.yml").getItemStack(playerName + "." + kitName + ".armor." + i);
-                inventory.setItem(36 + i, item);
-            }
-
-            ItemStack offhandItem = configManager.getConfig("data/kits.yml").getItemStack(playerName + "." + kitName + ".offhand");
-            inventory.setItem(40, offhandItem);
+        InventorySnapshot snapshot = getSnapshot(player, kitName);
+        if (snapshot != null) {
+            snapshot.applyToGui(inventory);
         }
     }
 
     @Override
     public void importInventory(@NotNull Player player, GuiBuilder inventory) {
-        ItemStack[] playerItems = player.getInventory().getContents();
-
-        for (int i = 0; i < 36; i++) {
-            inventory.setItem(i, playerItems[i]);
-        }
-
-        inventory.setItem(39, player.getInventory().getHelmet());
-        inventory.setItem(38, player.getInventory().getChestplate());
-        inventory.setItem(37, player.getInventory().getLeggings());
-        inventory.setItem(36, player.getInventory().getBoots());
-
-        inventory.setItem(40, player.getInventory().getItemInOffHand());
+        InventorySnapshot.fromPlayer(player).applyToGui(inventory);
     }
 
     public void importFromSession(@NotNull GuiBuilder inventory, @NotNull KitEditorSession session) {
-        applySnapshot(inventory, session.getInventorySnapshot(), session.getArmorSnapshot(), session.getOffhandSnapshot());
+        InventorySnapshot.fromArrays(session.getInventorySnapshot(), session.getArmorSnapshot(), session.getOffhandSnapshot())
+            .applyToGui(inventory);
     }
 
     @Override
@@ -418,19 +367,6 @@ public class KitUtil implements KitsAPI {
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to save kits file", e);
         }
-    }
-
-    private void applySnapshot(@NotNull GuiBuilder inventory, @NotNull ItemStack[] contents, @NotNull ItemStack[] armor, ItemStack offhand) {
-        for (int i = 0; i < Math.min(contents.length, 36); i++) {
-            inventory.setItem(i, cloneItem(contents[i]));
-        }
-        if (armor.length >= 4) {
-            inventory.setItem(36, cloneItem(armor[0]));
-            inventory.setItem(37, cloneItem(armor[1]));
-            inventory.setItem(38, cloneItem(armor[2]));
-            inventory.setItem(39, cloneItem(armor[3]));
-        }
-        inventory.setItem(40, cloneItem(offhand));
     }
 
     private ItemStack cloneItem(ItemStack stack) {

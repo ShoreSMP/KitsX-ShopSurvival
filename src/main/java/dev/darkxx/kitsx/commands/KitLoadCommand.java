@@ -23,6 +23,7 @@ package dev.darkxx.kitsx.commands;
 
 import dev.darkxx.kitsx.KitsX;
 import dev.darkxx.kitsx.hooks.worldguard.WorldGuardHook;
+import dev.darkxx.kitsx.utils.InventorySnapshot;
 import dev.darkxx.kitsx.utils.editor.KitEditorSession;
 import dev.darkxx.kitsx.utils.editor.KitEditorSessionManager;
 import dev.darkxx.kitsx.utils.wg.BlacklistedRegion;
@@ -68,11 +69,20 @@ public class KitLoadCommand extends XyrisCommand<KitsX> {
                 return true;
             }
 
-            org.bukkit.inventory.ItemStack[] invContents = player.getInventory().getStorageContents();
-            org.bukkit.inventory.ItemStack[] armorContents = player.getInventory().getArmorContents();
-            org.bukkit.inventory.ItemStack offhand = player.getInventory().getItemInOffHand();
+            String targetKit = "Kit " + kitIndex;
+            InventorySnapshot snapshot = KitEditorSessionManager.captureActiveEditorSnapshot(player, targetKit);
+            if (snapshot == null) {
+                snapshot = KitEditorSessionManager.getWorkingSnapshot(player, targetKit);
+            }
+            if (snapshot == null) {
+                player.sendMessage(ColorizeText.hex("&#ffa6a6Open that kit editor before importing."));
+                return true;
+            }
 
-            KitsX.getKitUtil().saveSnapshot(player, "Kit " + kitIndex, invContents, armorContents, offhand);
+            KitsX.getKitUtil().saveSnapshot(player, targetKit,
+                snapshot.getStorageContents(),
+                snapshot.getArmorContents(),
+                snapshot.getOffhandItem());
             KitEditorSessionManager.endSession(player);
             player.closeInventory();
             return true;

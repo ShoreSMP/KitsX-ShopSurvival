@@ -26,7 +26,6 @@ import dev.darkxx.kitsx.utils.config.MenuConfig;
 import dev.darkxx.utils.menu.xmenu.GuiBuilder;
 import dev.darkxx.utils.menu.xmenu.ItemBuilderGUI;
 import dev.darkxx.utils.text.color.ColorizeText;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
@@ -82,13 +81,13 @@ public class AutoRekitMenu extends GuiBuilder {
 
         setToggleAutoRekitLore(toggleAutoRekit, player);
 
-        inventory.setItem(slot, toggleAutoRekit, event -> Bukkit.getScheduler().runTaskAsynchronously(KitsX.getInstance(), () -> {
+        inventory.setItem(slot, toggleAutoRekit, event -> {
             Player clicker = (Player) event.getWhoClicked();
             KitsX.getAutoRekitUtil().toggle(clicker);
             setToggleAutoRekitLore(toggleAutoRekit, clicker);
             clicker.getOpenInventory().setItem(slot, toggleAutoRekit);
             clicker.playSound(clicker.getLocation(), Sound.UI_LOOM_TAKE_RESULT, 1.0f, 1.0f);
-        }));
+        });
     }
 
     @SuppressWarnings("deprecation")

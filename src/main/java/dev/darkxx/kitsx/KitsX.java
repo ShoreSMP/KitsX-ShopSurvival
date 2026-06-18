@@ -29,6 +29,7 @@ import dev.darkxx.kitsx.listeners.*;
 import dev.darkxx.kitsx.utils.config.MenuConfig;
 import dev.darkxx.kitsx.utils.*;
 import dev.darkxx.kitsx.utils.config.ConfigManager;
+import dev.darkxx.kitsx.utils.editor.KitEditorSessionManager;
 import dev.darkxx.utils.library.Utils;
 import dev.darkxx.utils.library.wrapper.PluginWrapper;
 import dev.darkxx.utils.menu.xmenu.GuiManager;
@@ -102,6 +103,7 @@ public final class KitsX extends PluginWrapper {
 
     @Override
     protected void stop() {
+        KitEditorSessionManager.endAllSessions();
         getKitUtil().saveAll();
         getPremadeKitUtil().saveAll();
     }

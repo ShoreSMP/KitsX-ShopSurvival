@@ -99,8 +99,15 @@ public class PremadeKitSelectorMenu {
 			inventory.setItem(slot, kitItems.get(kitKey), event -> {
 				Player clicker = (Player) event.getWhoClicked();
 				if (event.isLeftClick()) {
-					KitsX.getPremadeKitUtil().load(clicker, kitKey);
-					clicker.closeInventory();
+					if (KitEditorSessionManager.isEditing(clicker)) {
+						if (KitsX.getPremadeKitUtil().loadIntoSession(clicker, kitKey)) {
+							String targetKit = KitEditorSessionManager.getSession(clicker).getKitName();
+							KitEditorMenu.openKitEditor(clicker, targetKit);
+						}
+					} else {
+						KitsX.getPremadeKitUtil().load(clicker, kitKey);
+						clicker.closeInventory();
+					}
 				} else if (event.isRightClick()) {
 					PremadeKitMenu.createGui(clicker, kitKey).open(clicker);
 				}

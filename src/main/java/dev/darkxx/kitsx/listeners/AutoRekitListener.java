@@ -22,6 +22,7 @@
 package dev.darkxx.kitsx.listeners;
 
 import dev.darkxx.kitsx.KitsX;
+import dev.darkxx.kitsx.utils.editor.KitEditorSessionManager;
 import dev.darkxx.utils.text.color.ColorizeText;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -33,6 +34,9 @@ import org.jetbrains.annotations.NotNull;
 public class AutoRekitListener implements Listener {
 
     public static void load(Player player) {
+        if (KitEditorSessionManager.isEditing(player)) {
+            return;
+        }
         String kit = KitsX.getAutoRekitUtil().getKit(player);
         KitsX.getKitUtil().load(player, kit);
         if (!KitsX.getInstance().getConfig().getBoolean("messages.send_auto_rekit_message", true)) {
@@ -57,7 +61,7 @@ public class AutoRekitListener implements Listener {
         Player victim = e.getEntity();
         Player attacker = victim.getKiller();
         if (attacker != null) {
-            if (KitsX.getAutoRekitUtil().isEnabled(attacker)) {
+            if (!KitEditorSessionManager.isEditing(attacker) && KitsX.getAutoRekitUtil().isEnabled(attacker)) {
                 load(attacker);
             }
         }

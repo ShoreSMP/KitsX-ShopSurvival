@@ -88,7 +88,18 @@ public class KitRoomMenu extends GuiBuilder {
         inventory.addClickHandler(event -> {
             int slot = event.getRawSlot();
             if (slot >= 0 && slot <= 44) {
-                event.setCancelled(false);
+                event.setCancelled(true);
+                Player clicker = (Player) event.getWhoClicked();
+                ItemStack clicked = event.getCurrentItem();
+                if (clicked == null || clicked.getType() == Material.AIR) {
+                    return;
+                }
+                if (!KitEditorSessionManager.addItemToWorkingSnapshot(clicker, clicked)) {
+                    clicker.sendMessage(ColorizeText.hex("&#ffa6a6Open a kit editor before importing kit room items."));
+                    return;
+                }
+                String targetKit = KitEditorSessionManager.getSession(clicker).getKitName();
+                KitEditorMenu.openKitEditor(clicker, targetKit);
             }
         });
 

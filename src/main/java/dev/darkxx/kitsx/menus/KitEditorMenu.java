@@ -22,6 +22,7 @@
 package dev.darkxx.kitsx.menus;
 
 import dev.darkxx.kitsx.KitsX;
+import dev.darkxx.kitsx.utils.InventorySnapshot;
 import dev.darkxx.kitsx.utils.config.MenuConfig;
 import dev.darkxx.kitsx.utils.editor.KitEditorSession;
 import dev.darkxx.kitsx.utils.editor.KitEditorSessionManager;
@@ -58,16 +59,25 @@ public class KitEditorMenu extends GuiBuilder {
     public static void openKitEditor(Player player, String kitName) {
         int inventorySize = CONFIG.getConfig().getInt("size", 54);
         String titleTemplate = CONFIG.getConfig().getString("title", "Editing %kitname%");
-        String inventoryTitle = ColorizeText.hex(titleTemplate.replace("%kitname%", kitName));
+        String inventoryTitle = ColorizeText.hex(titleTemplate
+            .replace("%kitname%", kitName)
+            .replace("%kitName%", kitName));
 
         GuiBuilder inventory = new GuiBuilder(inventorySize, inventoryTitle);
+        KitEditorSession session;
         if (!KitEditorSessionManager.isEditing(player)) {
-            KitEditorSessionManager.startSession(player, kitName, inventoryTitle, inventory);
+            session = KitEditorSessionManager.startSession(player, kitName, inventoryTitle, inventory, true);
         } else {
             KitEditorSessionManager.updateSession(player, kitName, inventory, inventoryTitle);
+            session = KitEditorSessionManager.getSession(player);
         }
 
-        KitsX.getKitUtil().set(player, kitName, inventory);
+        if (session != null && session.hasWorkingSnapshot(kitName)) {
+            session.getWorkingSnapshot().applyToGui(inventory);
+        } else {
+            KitsX.getKitUtil().set(player, kitName, inventory);
+            KitEditorSessionManager.setWorkingSnapshot(player, kitName, InventorySnapshot.fromInventory(inventory.getInventory()));
+        }
 
         Set<Integer> blockedSlots = new HashSet<>();
         addFilter(inventory, inventorySize, blockedSlots);
@@ -157,28 +167,39 @@ public class KitEditorMenu extends GuiBuilder {
             Player clicker = (Player) event.getWhoClicked();
             switch (configName) {
                 case "save":
-                    KitsX.getKitUtil().save(clicker, kitName);
+                    InventorySnapshot saveSnapshot = KitEditorSessionManager.captureActiveEditorSnapshot(clicker, kitName);
+                    if (saveSnapshot == null || !KitEditorSessionManager.isActiveEditor(clicker, kitName, inventory)) {
+                        clicker.sendMessage(ColorizeText.hex("&#ffa6a6That kit editor is no longer active."));
+                        clicker.closeInventory();
+                        break;
+                    }
+                    KitsX.getKitUtil().saveSnapshot(clicker, kitName,
+                        saveSnapshot.getStorageContents(),
+                        saveSnapshot.getArmorContents(),
+                        saveSnapshot.getOffhandItem());
                     KitsMenu.openKitMenu(clicker).open(clicker);
                     break;
                 case "reset":
                     for (int i = 0; i <= 40; i++) {
                         inventory.setItem(i, new ItemStack(Material.AIR));
                     }
+                    KitEditorSessionManager.setWorkingSnapshot(clicker, kitName, InventorySnapshot.empty());
                     break;
                 case "importInventory":
                     KitEditorSession session = KitEditorSessionManager.getSession(clicker);
                     if (session != null) {
-                        KitsX.getKitUtil().importFromSession(session.getInventory(), session);
-                        KitEditorSessionManager.endSession(clicker);
-                        clicker.closeInventory();
+                        KitsX.getKitUtil().importFromSession(inventory, session);
+                        KitEditorSessionManager.captureActiveEditorSnapshot(clicker, kitName);
                     } else {
                         KitsX.getKitUtil().importInventory(clicker, inventory);
                     }
                     break;
                 case "premadeKit":
+                    KitEditorSessionManager.captureActiveEditorSnapshot(clicker, kitName);
                     PremadeKitSelectorMenu.createGui(clicker).open(clicker);
                     break;
                 case "back":
+                    KitEditorSessionManager.captureActiveEditorSnapshot(clicker, kitName);
                     KitsMenu.openKitMenu(clicker).open(clicker);
                     break;
             }

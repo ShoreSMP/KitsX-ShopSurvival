@@ -21,15 +21,20 @@
 
 package dev.darkxx.kitsx.utils.editor;
 
+import dev.darkxx.kitsx.utils.InventorySnapshot;
 import dev.darkxx.utils.menu.xmenu.GuiBuilder;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
@@ -43,6 +48,14 @@ public final class KitEditorSessionManager {
     }
 
     public static KitEditorSession startSession(@NotNull Player player, @NotNull String kitName, @NotNull String guiTitle, @NotNull GuiBuilder inventory) {
+        return startSession(player, kitName, guiTitle, inventory, false);
+    }
+
+    public static KitEditorSession startSession(@NotNull Player player,
+                                                @NotNull String kitName,
+                                                @NotNull String guiTitle,
+                                                @NotNull GuiBuilder inventory,
+                                                boolean editorInventoryActive) {
         endSession(player);
 
         PlayerInventory playerInventory = player.getInventory();
@@ -58,6 +71,7 @@ public final class KitEditorSessionManager {
 
         KitEditorSession session = new KitEditorSession(player.getUniqueId(), kitName, guiTitle, inventory,
             inventorySnapshot, armorSnapshot, offhandSnapshot, anchor);
+        session.setEditorInventoryActive(editorInventoryActive);
         SESSIONS.put(player.getUniqueId(), session);
         return session;
     }
@@ -92,6 +106,19 @@ public final class KitEditorSessionManager {
         if (session != null) {
             player.setItemOnCursor(new ItemStack(Material.AIR));
             restorePlayerInventory(player.getInventory(), session);
+            player.updateInventory();
+        }
+    }
+
+    public static void endAllSessions() {
+        List<UUID> sessionIds = new ArrayList<>(SESSIONS.keySet());
+        for (UUID sessionId : sessionIds) {
+            Player player = Bukkit.getPlayer(sessionId);
+            if (player != null) {
+                endSession(player);
+            } else {
+                SESSIONS.remove(sessionId);
+            }
         }
     }
 
@@ -102,9 +129,18 @@ public final class KitEditorSessionManager {
         }
         session.setInventory(inventory);
         session.setGuiTitle(guiTitle);
+        session.setEditorInventoryActive(false);
     }
 
     public static void updateSession(@NotNull Player player, @NotNull String kitName, @NotNull GuiBuilder inventory, @NotNull String guiTitle) {
+        updateSession(player, kitName, inventory, guiTitle, true);
+    }
+
+    public static void updateSession(@NotNull Player player,
+                                     @NotNull String kitName,
+                                     @NotNull GuiBuilder inventory,
+                                     @NotNull String guiTitle,
+                                     boolean editorInventoryActive) {
         KitEditorSession session = SESSIONS.get(player.getUniqueId());
         if (session == null) {
             return;
@@ -112,10 +148,67 @@ public final class KitEditorSessionManager {
         session.setKitName(kitName);
         session.setInventory(inventory);
         session.setGuiTitle(guiTitle);
+        session.setEditorInventoryActive(editorInventoryActive);
+    }
+
+    public static void setWorkingSnapshot(@NotNull Player player, @NotNull String kitName, @NotNull InventorySnapshot snapshot) {
+        KitEditorSession session = SESSIONS.get(player.getUniqueId());
+        if (session == null) {
+            return;
+        }
+        session.setWorkingSnapshot(kitName, snapshot);
+    }
+
+    public static InventorySnapshot getWorkingSnapshot(@NotNull Player player, @NotNull String kitName) {
+        KitEditorSession session = SESSIONS.get(player.getUniqueId());
+        if (session == null || !session.hasWorkingSnapshot(kitName)) {
+            return null;
+        }
+        return session.getWorkingSnapshot();
+    }
+
+    public static InventorySnapshot captureActiveEditorSnapshot(@NotNull Player player, @NotNull String kitName) {
+        KitEditorSession session = SESSIONS.get(player.getUniqueId());
+        if (session == null || !session.isEditorInventoryActive() || !kitName.equals(session.getKitName())) {
+            return null;
+        }
+        Inventory topInventory = player.getOpenInventory().getTopInventory();
+        if (topInventory != session.getInventory().getInventory()) {
+            return null;
+        }
+        InventorySnapshot snapshot = InventorySnapshot.fromInventory(topInventory);
+        session.setWorkingSnapshot(kitName, snapshot);
+        return snapshot;
+    }
+
+    public static boolean isActiveEditor(@NotNull Player player, @NotNull String kitName, @NotNull GuiBuilder inventory) {
+        KitEditorSession session = SESSIONS.get(player.getUniqueId());
+        return session != null
+            && session.isEditorInventoryActive()
+            && kitName.equals(session.getKitName())
+            && session.getInventory() == inventory
+            && player.getOpenInventory().getTopInventory() == inventory.getInventory();
+    }
+
+    public static boolean addItemToWorkingSnapshot(@NotNull Player player, @NotNull ItemStack item) {
+        KitEditorSession session = SESSIONS.get(player.getUniqueId());
+        if (session == null || !isNumericKitName(session.getKitName())) {
+            return false;
+        }
+        InventorySnapshot base = session.hasWorkingSnapshot(session.getKitName())
+            ? session.getWorkingSnapshot()
+            : InventorySnapshot.empty();
+        InventorySnapshot updated = base.withAddedItem(item);
+        if (updated == base) {
+            return false;
+        }
+        session.setWorkingSnapshot(session.getKitName(), updated);
+        return true;
     }
 
     private static void restorePlayerInventory(@NotNull PlayerInventory inventory, @NotNull KitEditorSession session) {
-        inventory.setContents(copyInventory(session.getInventorySnapshot()));
+        inventory.clear();
+        inventory.setStorageContents(copyInventory(session.getInventorySnapshot()));
         inventory.setArmorContents(copyArmor(session.getArmorSnapshot()));
         inventory.setItemInOffHand(cloneItem(session.getOffhandSnapshot()));
     }

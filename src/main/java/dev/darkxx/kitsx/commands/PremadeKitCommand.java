@@ -56,6 +56,10 @@ public class PremadeKitCommand extends XyrisCommand<KitsX> {
             }
         }
 
+        if (args.length == 0) {
+            return true;
+        }
+
         String subCommand = args[0].toLowerCase();
 
         if (subCommand.equals("save") && args.length == 2) {
