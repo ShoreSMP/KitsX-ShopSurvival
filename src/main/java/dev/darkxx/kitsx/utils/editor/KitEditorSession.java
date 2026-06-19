@@ -21,13 +21,11 @@
 
 package dev.darkxx.kitsx.utils.editor;
 
-import dev.darkxx.kitsx.utils.InventorySnapshot;
 import dev.darkxx.utils.menu.xmenu.GuiBuilder;
 import org.bukkit.Location;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Objects;
 import java.util.UUID;
 
 public final class KitEditorSession {
@@ -40,9 +38,7 @@ public final class KitEditorSession {
     private final ItemStack[] armorSnapshot;
     private final ItemStack offhandSnapshot;
     private final Location anchor;
-    private InventorySnapshot workingSnapshot;
-    private String workingKitName;
-    private boolean editorInventoryActive;
+    private boolean paletteOpen;
 
     public KitEditorSession(@NotNull UUID playerId,
                              @NotNull String kitName,
@@ -60,7 +56,7 @@ public final class KitEditorSession {
         this.armorSnapshot = armorSnapshot;
         this.offhandSnapshot = offhandSnapshot;
         this.anchor = anchor.clone();
-        this.editorInventoryActive = false;
+        this.paletteOpen = false;
     }
 
     @NotNull
@@ -95,12 +91,12 @@ public final class KitEditorSession {
         this.inventory = inventory;
     }
 
-    public boolean isEditorInventoryActive() {
-        return editorInventoryActive;
+    public boolean isPaletteOpen() {
+        return paletteOpen;
     }
 
-    public void setEditorInventoryActive(boolean editorInventoryActive) {
-        this.editorInventoryActive = editorInventoryActive;
+    public void setPaletteOpen(boolean paletteOpen) {
+        this.paletteOpen = paletteOpen;
     }
 
     @NotNull
@@ -115,19 +111,6 @@ public final class KitEditorSession {
 
     public ItemStack getOffhandSnapshot() {
         return offhandSnapshot;
-    }
-
-    public boolean hasWorkingSnapshot(@NotNull String kitName) {
-        return workingSnapshot != null && Objects.equals(workingKitName, kitName);
-    }
-
-    public InventorySnapshot getWorkingSnapshot() {
-        return workingSnapshot;
-    }
-
-    public void setWorkingSnapshot(@NotNull String kitName, @NotNull InventorySnapshot snapshot) {
-        this.workingKitName = kitName;
-        this.workingSnapshot = snapshot;
     }
 
     @NotNull

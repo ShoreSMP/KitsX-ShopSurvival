@@ -30,6 +30,10 @@ messages:
   kit_saved: "&#7cff6e%kit% saved successfully!"
   kit_loaded: "&#7cff6e%kit% loaded successfully!"
   kit_load_cooldown: "&#ffa6a6Please wait %time% before loading another kit."
+  editor_region_required: "&#ffa6a6You can only edit kits in the kit editor region."
+  kit_edit_started: "&#7cff6eEditing %kit%."
+  kit_edit_save_hint: "&#f8ff9cUse /customkit for items, /%kitcmd% save to save, or /kitcancel to cancel."
+  kit_edit_wrong_kit: "&#ffa6a6You are editing %kit%. Use /%kitcmd% save for that kit."
   premade_kit_saved: "&#7cff6ePremade kit saved successfully!"
   premade_kit_loaded: "&#7cff6ePremade kit loaded successfully!"
   premade_kit_empty: "&#ffa6a6The premade kit is empty."
@@ -40,3 +44,6 @@ messages:
 blacklisted_regions:
   - "arena1"
   - "arena2"
+
+editor_regions:
+  - "kit_editor"

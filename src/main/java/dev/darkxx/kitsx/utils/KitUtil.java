@@ -118,7 +118,7 @@ public class KitUtil implements KitsAPI {
     @SuppressWarnings("deprecation")
     public void load(@NotNull Player player, String kitName) {
         if (KitEditorSessionManager.isEditing(player)) {
-            loadIntoSession(player, kitName);
+            player.sendMessage(ColorizeText.hex("&#ffa6a6Finish your kit edit with /k# save or /kitcancel before loading kits."));
             return;
         }
 
@@ -155,15 +155,17 @@ public class KitUtil implements KitsAPI {
         }
     }
 
-    public boolean loadIntoSession(@NotNull Player player, @NotNull String kitName) {
+    public void loadForEditor(@NotNull Player player, @NotNull String kitName) {
         InventorySnapshot snapshot = getSnapshot(player, kitName);
         if (snapshot == null) {
-            player.sendMessage(ColorizeText.hex("&#ffa6a6" + kitName + " is empty."));
-            return false;
+            snapshot = InventorySnapshot.empty();
         }
-        KitEditorSessionManager.setWorkingSnapshot(player, kitName, snapshot);
-        sendKitLoadedMessage(player, kitName);
-        return true;
+        snapshot.applyToPlayer(player);
+    }
+
+    public boolean loadIntoSession(@NotNull Player player, @NotNull String kitName) {
+        player.sendMessage(ColorizeText.hex("&#ffa6a6Kit loads cannot be imported into an active editor. Use /customkit for the editor palette."));
+        return false;
     }
 
     private InventorySnapshot getSnapshot(@NotNull Player player, @NotNull String kitName) {
@@ -333,12 +335,15 @@ public class KitUtil implements KitsAPI {
 
     @Override
     public void importInventory(@NotNull Player player, GuiBuilder inventory) {
+        if (!KitEditorSessionManager.isEditing(player)) {
+            player.sendMessage(ColorizeText.hex("&#ffa6a6Inventory import is only available inside a kit edit session."));
+            return;
+        }
         InventorySnapshot.fromPlayer(player).applyToGui(inventory);
     }
 
     public void importFromSession(@NotNull GuiBuilder inventory, @NotNull KitEditorSession session) {
-        InventorySnapshot.fromArrays(session.getInventorySnapshot(), session.getArmorSnapshot(), session.getOffhandSnapshot())
-            .applyToGui(inventory);
+        // The original inventory snapshot is restoration-only and must never be imported into a kit.
     }
 
     @Override

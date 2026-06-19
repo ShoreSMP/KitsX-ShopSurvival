@@ -48,6 +48,10 @@ public class PremadeKitMenu extends GuiBuilder {
     }
 
     public static @NotNull GuiBuilder createGui(Player player, String kitName) {
+        if (KitEditorSessionManager.isEditing(player)) {
+            return KitRoomMenu.openKitRoom(player);
+        }
+
         String title = ColorizeText.hex(Objects.requireNonNull(CONFIG.getConfig().getString("premade_kit.title")));
         GuiBuilder inventory = new GuiBuilder(CONFIG.getConfig().getInt("premade_kit.size"), title);
 
@@ -103,6 +107,10 @@ public class PremadeKitMenu extends GuiBuilder {
 
             inventory.setItem(slot, item, event -> {
                 Player clicker = (Player) event.getWhoClicked();
+                if (KitEditorSessionManager.isEditing(clicker)) {
+                    clicker.closeInventory();
+                    return;
+                }
                 KitsMenu.openKitMenu(clicker).open(clicker);
             });
         }

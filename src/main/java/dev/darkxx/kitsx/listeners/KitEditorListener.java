@@ -24,6 +24,7 @@ package dev.darkxx.kitsx.listeners;
 import dev.darkxx.kitsx.KitsX;
 import dev.darkxx.kitsx.utils.editor.KitEditorSession;
 import dev.darkxx.kitsx.utils.editor.KitEditorSessionManager;
+import dev.darkxx.kitsx.utils.wg.BlacklistedRegion;
 import dev.darkxx.utils.text.color.ColorizeText;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -58,8 +59,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class KitEditorListener implements Listener {
 
-    private static final double MAX_MOVE_DISTANCE_SQ = 1.0;
-    private static final String EDITING_BLOCKED_MESSAGE = "&#ffa6a6Editing a kit. Use /kitcancel or /k# import.";
+    private static final String EDITING_BLOCKED_MESSAGE = "&#ffa6a6Editing a kit. Use /customkit for items, /k# save, or /kitcancel.";
     private static final long EDITING_BLOCKED_MESSAGE_COOLDOWN_MS = 1500L;
     private static final Map<UUID, Long> LAST_EDITING_BLOCKED_MESSAGE_AT = new ConcurrentHashMap<>();
 
@@ -99,6 +99,12 @@ public final class KitEditorListener implements Listener {
         return kitIndex >= 1 && kitIndex <= maxKits;
     }
 
+    private static String normalizeCommandToken(String token) {
+        String lower = token.toLowerCase(Locale.ENGLISH);
+        int namespace = lower.indexOf(':');
+        return namespace >= 0 ? lower.substring(namespace + 1) : lower;
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
@@ -110,15 +116,12 @@ public final class KitEditorListener implements Listener {
         if (to == null) {
             return;
         }
-        Location anchor = session.getAnchor();
-        if (!anchor.getWorld().equals(to.getWorld())) {
-            event.setTo(anchor);
-            sendEditingBlockedMessage(player);
-            return;
-        }
-        if (to.distanceSquared(anchor) > MAX_MOVE_DISTANCE_SQ) {
-            event.setTo(anchor);
-            sendEditingBlockedMessage(player);
+        if (!BlacklistedRegion.isInEditorRegion(player, to)) {
+            KitEditorSessionManager.endSession(player);
+            player.closeInventory();
+            String message = KitsX.getInstance().getConfig().getString("messages.editor_region_required",
+                    "&#ffa6a6You can only edit kits in the kit editor region.");
+            player.sendMessage(ColorizeText.hex(message));
         }
     }
 
@@ -137,9 +140,9 @@ public final class KitEditorListener implements Listener {
         if (parts.length == 0) {
             return;
         }
-        String primary = parts[0].toLowerCase(Locale.ENGLISH);
-        String second = parts.length > 1 ? parts[1].toLowerCase(Locale.ENGLISH) : "";
-        String third = parts.length > 2 ? parts[2].toLowerCase(Locale.ENGLISH) : "";
+        String primary = normalizeCommandToken(parts[0]);
+        String second = parts.length > 1 ? normalizeCommandToken(parts[1]) : "";
+        String third = parts.length > 2 ? normalizeCommandToken(parts[2]) : "";
         if (primary.equals("kitcancel") || primary.equals("customkit")) {
             return;
         }
@@ -149,14 +152,14 @@ public final class KitEditorListener implements Listener {
         if (primary.equals("kitsx") && second.equals("customkit")) {
             return;
         }
-        if (isKitNumberCommand(primary) && second.equals("import")) {
+        if (isKitNumberCommand(primary) && (second.equals("save") || second.equals("import"))) {
             return;
         }
-        if (primary.equals("kitsx") && isKitNumberCommand(second) && third.equals("import")) {
+        if (primary.equals("kitsx") && isKitNumberCommand(second) && (third.equals("save") || third.equals("import"))) {
             return;
         }
         event.setCancelled(true);
-        player.sendMessage(ColorizeText.hex("&#ffa6a6You can only use /kitcancel or /k# import while editing kits."));
+        player.sendMessage(ColorizeText.hex("&#ffa6a6You can only use /customkit, /kitcancel, or /k# save while editing kits."));
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -255,6 +258,7 @@ public final class KitEditorListener implements Listener {
         if (cursor != null && cursor.getType() != Material.AIR) {
             player.setItemOnCursor(new ItemStack(Material.AIR));
         }
+        KitEditorSessionManager.setPaletteOpen(player, false);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)

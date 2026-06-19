@@ -54,38 +54,22 @@ public class KitLoadCommand extends XyrisCommand<KitsX> {
             return true;
         }
 
+        if (args.length > 0 && isSaveAlias(args[0])) {
+            saveEditedKit(player);
+            return true;
+        }
+
+        if (KitEditorSessionManager.isEditing(player)) {
+            player.sendMessage(ColorizeText.hex("&#ffa6a6Finish your kit edit with /k# save or /kitcancel before loading kits."));
+            return true;
+        }
+
         if (WorldGuardHook.get().isEnabled()) {
             if (BlacklistedRegion.isInBlacklistedRegion(player)) {
                 String cannotUseHere = Objects.requireNonNull(KitsX.getInstance().getConfig().getString("messages.blacklisted_region"));
                 player.sendMessage(ColorizeText.hex(cannotUseHere));
                 return true;
             }
-        }
-
-        if (args.length > 0 && args[0].equalsIgnoreCase("import")) {
-            KitEditorSession session = KitEditorSessionManager.getSession(player);
-            if (session == null) {
-                player.sendMessage(ColorizeText.hex("&#ffa6a6You must be in a kit edit session to use /k# import."));
-                return true;
-            }
-
-            String targetKit = "Kit " + kitIndex;
-            InventorySnapshot snapshot = KitEditorSessionManager.captureActiveEditorSnapshot(player, targetKit);
-            if (snapshot == null) {
-                snapshot = KitEditorSessionManager.getWorkingSnapshot(player, targetKit);
-            }
-            if (snapshot == null) {
-                player.sendMessage(ColorizeText.hex("&#ffa6a6Open that kit editor before importing."));
-                return true;
-            }
-
-            KitsX.getKitUtil().saveSnapshot(player, targetKit,
-                snapshot.getStorageContents(),
-                snapshot.getArmorContents(),
-                snapshot.getOffhandItem());
-            KitEditorSessionManager.endSession(player);
-            player.closeInventory();
-            return true;
         }
 
         int kits = plugin.getConfig().getInt("kits", 7);
@@ -103,5 +87,51 @@ public class KitLoadCommand extends XyrisCommand<KitsX> {
             }
         }
         return false;
+    }
+
+    private void saveEditedKit(Player player) {
+        KitEditorSession session = KitEditorSessionManager.getSession(player);
+        if (session == null) {
+            player.sendMessage(ColorizeText.hex("&#ffa6a6You must be editing a kit to use /k# save."));
+            return;
+        }
+
+        String targetKit = "Kit " + kitIndex;
+        if (!targetKit.equals(session.getKitName())) {
+            String message = KitsX.getInstance().getConfig().getString("messages.kit_edit_wrong_kit",
+                    "&#ffa6a6You are editing %kit%. Use /%kitcmd% save for that kit.");
+            player.sendMessage(ColorizeText.hex(message
+                    .replace("%kit%", session.getKitName())
+                    .replace("%kitcmd%", saveCommandFor(session))));
+            return;
+        }
+
+        if (!player.hasPermission("kitsx.kit" + kitIndex)) {
+            player.sendMessage(ColorizeText.hex("&#ffa6a6You don't have permission to save " + targetKit + "."));
+            return;
+        }
+
+        InventorySnapshot snapshot = InventorySnapshot.fromPlayer(player);
+        KitsX.getKitUtil().saveSnapshot(player, targetKit,
+                snapshot.getStorageContents(),
+                snapshot.getArmorContents(),
+                snapshot.getOffhandItem());
+        KitEditorSessionManager.endSession(player);
+        player.closeInventory();
+    }
+
+    private boolean isSaveAlias(String arg) {
+        return arg.equalsIgnoreCase("save") || arg.equalsIgnoreCase("import");
+    }
+
+    private String saveCommandFor(KitEditorSession session) {
+        String kitName = session.getKitName().trim();
+        if (kitName.toLowerCase().startsWith("kit ")) {
+            String suffix = kitName.substring(4).trim();
+            if (!suffix.isEmpty() && suffix.chars().allMatch(Character::isDigit)) {
+                return "k" + suffix;
+            }
+        }
+        return "k#";
     }
 }

@@ -9,6 +9,7 @@ import dev.darkxx.utils.text.color.ColorizeText;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.configuration.ConfigurationSection;
@@ -28,14 +29,16 @@ public class KitRoomMenu extends GuiBuilder {
 
     public static @NotNull GuiBuilder openKitRoom(Player player) {
         String inventoryTitle = CONFIG.getConfig().getString("kit_room.title", "Virtual Kit Room");
-        GuiBuilder inventory = new GuiBuilder(54, inventoryTitle);
+        GuiBuilder inventory = new GuiBuilder(54, ColorizeText.hex(inventoryTitle));
         if (!KitEditorSessionManager.isEditing(player)) {
-            KitEditorSessionManager.startSession(player, "Kit Room", inventoryTitle, inventory);
-        } else {
-            KitEditorSessionManager.updateGui(player, inventory, inventoryTitle);
+            player.sendMessage(ColorizeText.hex("&#ffa6a6Right-click a kit in the editor region before opening the item palette."));
+            inventory.addClickHandler(event -> event.setCancelled(true));
+            return inventory;
         }
+        KitEditorSessionManager.updateGui(player, inventory, inventoryTitle);
 
         ConfigurationSection itemsSection = CONFIG.getConfig().getConfigurationSection("kit_room.items");
+        setCurrentCategory(player, "CRYSTAL_PVP");
         KitsX.getKitRoomUtil().load(inventory, "CRYSTAL_PVP");
         if (itemsSection != null) {
             for (String key : itemsSection.getKeys(false)) {
@@ -66,7 +69,7 @@ public class KitRoomMenu extends GuiBuilder {
                         inventory.setItem(slot, item, event -> {
                             if (key.equalsIgnoreCase("back")) {
                                 Player p = (Player) event.getWhoClicked();
-                                KitsMenu.openKitMenu(p).open(p);
+                                p.closeInventory();
                             } else if (key.equalsIgnoreCase("refill")) {
                                 Player p = (Player) event.getWhoClicked();
                                 String currentCategory = getCurrentCategory(p);
@@ -89,21 +92,33 @@ public class KitRoomMenu extends GuiBuilder {
             int slot = event.getRawSlot();
             if (slot >= 0 && slot <= 44) {
                 event.setCancelled(true);
+                if (!isPaletteCloneClick(event.getClick())) {
+                    return;
+                }
                 Player clicker = (Player) event.getWhoClicked();
                 ItemStack clicked = event.getCurrentItem();
                 if (clicked == null || clicked.getType() == Material.AIR) {
                     return;
                 }
-                if (!KitEditorSessionManager.addItemToWorkingSnapshot(clicker, clicked)) {
-                    clicker.sendMessage(ColorizeText.hex("&#ffa6a6Open a kit editor before importing kit room items."));
-                    return;
-                }
-                String targetKit = KitEditorSessionManager.getSession(clicker).getKitName();
-                KitEditorMenu.openKitEditor(clicker, targetKit);
+                addPaletteItemToLiveInventory(clicker, clicked);
             }
         });
 
         return inventory;
+    }
+
+    private static boolean isPaletteCloneClick(ClickType clickType) {
+        return clickType == ClickType.LEFT || clickType == ClickType.RIGHT;
+    }
+
+    private static void addPaletteItemToLiveInventory(Player player, ItemStack sourceItem) {
+        ItemStack clone = sourceItem.clone();
+        Map<Integer, ItemStack> leftovers = player.getInventory().addItem(clone);
+        if (!leftovers.isEmpty()) {
+            player.sendMessage(ColorizeText.hex("&#ffa6a6Your kit editor inventory is full."));
+            return;
+        }
+        player.updateInventory();
     }
 
     public static void setCurrentCategory(Player player, String category) {

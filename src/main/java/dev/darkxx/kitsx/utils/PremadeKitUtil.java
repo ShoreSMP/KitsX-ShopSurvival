@@ -67,7 +67,7 @@ public class PremadeKitUtil implements PremadeKitAPI {
     @SuppressWarnings({"unchecked", "deprecation"})
     public void load(Player player, String kitName) {
         if (KitEditorSessionManager.isEditing(player)) {
-            loadIntoSession(player, kitName);
+            player.sendMessage(ColorizeText.hex("&#ffa6a6Finish your kit edit with /k# save or /kitcancel before loading premade kits."));
             return;
         }
 
@@ -102,30 +102,8 @@ public class PremadeKitUtil implements PremadeKitAPI {
     }
 
     public boolean loadIntoSession(Player player, String kitName) {
-        KitEditorSession session = KitEditorSessionManager.getSession(player);
-        if (session == null) {
-            return false;
-        }
-        if (!KitEditorSessionManager.isEditingKit(player)) {
-            player.sendMessage(ColorizeText.hex("&#ffa6a6Open a kit editor before importing a premade kit."));
-            return false;
-        }
-
-        InventorySnapshot snapshot = getSnapshot(kitName);
-        if (snapshot == null) {
-            String empty = KitsX.getInstance().getConfig().getString("messages.premade_kit_empty");
-            if (empty != null) {
-                player.sendMessage(ColorizeText.hex(empty.replace("%kit%", kitName)));
-            }
-            return false;
-        }
-
-        KitEditorSessionManager.setWorkingSnapshot(player, session.getKitName(), snapshot);
-        String loaded = KitsX.getInstance().getConfig().getString("messages.premade_kit_loaded");
-        if (loaded != null) {
-            player.sendMessage(ColorizeText.hex(loaded.replace("%kit%", kitName)));
-        }
-        return true;
+        player.sendMessage(ColorizeText.hex("&#ffa6a6Premade kits cannot be imported into an active editor. Use /customkit for the editor palette."));
+        return false;
     }
 
     @SuppressWarnings("unchecked")

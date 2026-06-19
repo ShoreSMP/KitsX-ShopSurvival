@@ -35,15 +35,19 @@ public class MenuConfig {
     private final FileConfiguration config;
 
     public MenuConfig(@NotNull Plugin plugin, String fileName) {
+        this(plugin, fileName, false);
+    }
+
+    public MenuConfig(@NotNull Plugin plugin, String fileName, boolean replaceExisting) {
         File file = new File(plugin.getDataFolder(), fileName);
-        if (!file.exists()) {
-            plugin.saveResource(fileName, false);
+        if (!file.exists() || replaceExisting) {
+            plugin.saveResource(fileName, replaceExisting);
         }
         this.config = YamlConfiguration.loadConfiguration(file);
     }
 
     public static void of(Plugin plugin) {
-        new MenuConfig(plugin, "menus/kits_menu.yml");
+        new MenuConfig(plugin, "menus/kits_menu.yml", true);
         new MenuConfig(plugin, "menus/kiteditor_menu.yml");
         new MenuConfig(plugin, "menus/autorekit_menu.yml");
         new MenuConfig(plugin, "menus/premadekit_menu.yml");

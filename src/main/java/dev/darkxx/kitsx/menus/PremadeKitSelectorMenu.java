@@ -43,6 +43,10 @@ import java.util.Map;
 public class PremadeKitSelectorMenu {
 
 	public static @NotNull GuiBuilder createGui(Player player) {
+		if (KitEditorSessionManager.isEditing(player)) {
+			return KitRoomMenu.openKitRoom(player);
+		}
+
 		MenuConfig menuConfig = new MenuConfig(KitsX.getInstance(), "menus/premadekit_selector_menu.yml");
 		FileConfiguration config = menuConfig.getConfig();
 		String title = (String) ConfigCache.getOrDefault("premade_kit.title",
@@ -98,16 +102,13 @@ public class PremadeKitSelectorMenu {
 			int slot = (int) ConfigCache.get("premade_kit.kits." + kitKey + ".slot");
 			inventory.setItem(slot, kitItems.get(kitKey), event -> {
 				Player clicker = (Player) event.getWhoClicked();
+				if (KitEditorSessionManager.isEditing(clicker)) {
+					clicker.sendMessage(ColorizeText.hex("&#ffa6a6Premade kits cannot be loaded while editing. Use /customkit for the editor palette."));
+					return;
+				}
 				if (event.isLeftClick()) {
-					if (KitEditorSessionManager.isEditing(clicker)) {
-						if (KitsX.getPremadeKitUtil().loadIntoSession(clicker, kitKey)) {
-							String targetKit = KitEditorSessionManager.getSession(clicker).getKitName();
-							KitEditorMenu.openKitEditor(clicker, targetKit);
-						}
-					} else {
-						KitsX.getPremadeKitUtil().load(clicker, kitKey);
-						clicker.closeInventory();
-					}
+					KitsX.getPremadeKitUtil().load(clicker, kitKey);
+					clicker.closeInventory();
 				} else if (event.isRightClick()) {
 					PremadeKitMenu.createGui(clicker, kitKey).open(clicker);
 				}
@@ -135,6 +136,10 @@ public class PremadeKitSelectorMenu {
 		ItemStack backButton = (ItemStack) ConfigCache.get("premade_kit.back.item");
 		inventory.setItem(backSlot, backButton, event -> {
 			Player clicker = (Player) event.getWhoClicked();
+			if (KitEditorSessionManager.isEditing(clicker)) {
+				clicker.closeInventory();
+				return;
+			}
 			KitsMenu.openKitMenu(clicker).open(clicker);
 		});
 

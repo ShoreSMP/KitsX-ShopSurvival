@@ -23,7 +23,9 @@ package dev.darkxx.kitsx.commands;
 
 import dev.darkxx.kitsx.KitsX;
 import dev.darkxx.kitsx.hooks.worldguard.WorldGuardHook;
+import dev.darkxx.kitsx.menus.KitRoomMenu;
 import dev.darkxx.kitsx.menus.KitsMenu;
+import dev.darkxx.kitsx.utils.editor.KitEditorSessionManager;
 import dev.darkxx.kitsx.utils.wg.BlacklistedRegion;
 import dev.darkxx.utils.command.XyrisCommand;
 import dev.darkxx.utils.text.color.ColorizeText;
@@ -45,6 +47,10 @@ public class KitCommand extends XyrisCommand<KitsX> {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {
         if (sender instanceof Player player) {
+            if (KitEditorSessionManager.isEditing(player)) {
+                KitRoomMenu.openKitRoom(player).open(player);
+                return true;
+            }
 
             if (WorldGuardHook.get().isEnabled()) {
                 if (BlacklistedRegion.isInBlacklistedRegion(player)) {

@@ -24,6 +24,7 @@ package dev.darkxx.kitsx.menus;
 import dev.darkxx.kitsx.KitsX;
 import dev.darkxx.kitsx.utils.config.MenuConfig;
 import dev.darkxx.kitsx.utils.editor.KitEditorSessionManager;
+import dev.darkxx.kitsx.utils.wg.BlacklistedRegion;
 import dev.darkxx.utils.menu.xmenu.GuiBuilder;
 import dev.darkxx.utils.menu.xmenu.ItemBuilderGUI;
 import dev.darkxx.utils.text.color.ColorizeText;
@@ -37,10 +38,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
 public class KitsMenu extends GuiBuilder {
@@ -54,35 +53,23 @@ public class KitsMenu extends GuiBuilder {
     }
 
     public static @NotNull GuiBuilder openKitMenu(Player player) {
+        if (KitEditorSessionManager.isEditing(player)) {
+            return KitRoomMenu.openKitRoom(player);
+        }
+
         int inventorySize = CONFIG.getConfig().getInt("kits_menu.size", 54);
         String kitsTitle = CONFIG.getConfig().getString("kits_menu.title", "Kits");
         String inventoryTitle = ColorizeText.hex(kitsTitle);
 
         GuiBuilder inventory = new GuiBuilder(inventorySize, inventoryTitle);
-        if (!KitEditorSessionManager.isEditing(player)) {
-            KitEditorSessionManager.startSession(player, "Kits", inventoryTitle, inventory);
-        } else {
-            KitEditorSessionManager.updateGui(player, inventory, inventoryTitle);
-        }
 
         if (CONFIG.getConfig().getBoolean("kits_menu.filter.enabled", true)) {
             addFilterItems(inventory);
         }
 
-        Set<Integer> kitItemSlots = new HashSet<>();
-        addKitItems(inventory, player, kitItemSlots);
+        addKitItems(inventory, player);
         addKitRoomItem(inventory, player);
         addClearInventoryItem(inventory, player);
-        addPremadeKitItem(inventory, player);
-
-        inventory.addClickHandler(event -> {
-            if (!KitEditorSessionManager.isEditing(player)) {
-                return;
-            }
-            if (!kitItemSlots.contains(event.getRawSlot())) {
-                event.setCancelled(true);
-            }
-        });
 
         return inventory;
     }
@@ -111,11 +98,11 @@ public class KitsMenu extends GuiBuilder {
         }
     }
 
-    public static void addKitItems(GuiBuilder inventory, Player player, Set<Integer> kitItemSlots) {
-        addItemGroup(inventory, "kits_menu.kits", Material.END_CRYSTAL, player, kitItemSlots);
+    public static void addKitItems(GuiBuilder inventory, Player player) {
+        addItemGroup(inventory, "kits_menu.kits", Material.END_CRYSTAL, player);
     }
 
-    public static void addItemGroup(GuiBuilder inventory, String configPath, Material defaultMaterial, Player player, Set<Integer> kitItemSlots) {
+    public static void addItemGroup(GuiBuilder inventory, String configPath, Material defaultMaterial, Player player) {
         List<Integer> slots = CONFIG.getConfig().getIntegerList(configPath + ".slots");
 
         for (int i = 0; i < slots.size(); i++) {
@@ -145,33 +132,68 @@ public class KitsMenu extends GuiBuilder {
                     .flags(flags.toArray(new ItemFlag[0]))
                     .build();
 
-            if (!hasKitPermission(player, kitNumber, slots.size())) {
+            if (!hasKitPermission(player, kitNumber)) {
                 continue;
             }
-            kitItemSlots.add(slot);
             inventory.setItem(slot, item, e -> {
+                Player clicker = (Player) e.getWhoClicked();
                 if (e.isRightClick()) {
-                    KitEditorMenu.openKitEditor(player, "Kit " + kitNumber);
+                    startEditor(clicker, kitNumber);
                 } else if (e.isLeftClick()) {
-                    if (KitEditorSessionManager.isEditing(player)) {
-                        if (KitsX.getKitUtil().loadIntoSession(player, "Kit " + kitNumber)) {
-                            KitEditorMenu.openKitEditor(player, "Kit " + kitNumber);
-                        }
-                    } else {
-                        KitsX.getKitUtil().load(player, "Kit " + kitNumber);
+                    if (KitEditorSessionManager.isEditing(clicker)) {
+                        clicker.sendMessage(ColorizeText.hex("&#ffa6a6Finish the current edit with /k# save or /kitcancel first."));
+                        return;
                     }
+                    KitsX.getKitUtil().load(clicker, "Kit " + kitNumber);
                 }
             });
         }
     }
 
-    private static boolean hasKitPermission(Player player, int kitNumber, int totalKits) {
-        for (int permissionKit = kitNumber; permissionKit <= totalKits; permissionKit++) {
-            if (player.hasPermission("kits.kit" + permissionKit)) {
-                return true;
-            }
+    private static boolean hasKitPermission(Player player, int kitNumber) {
+        return player.hasPermission("kitsx.kit" + kitNumber);
+    }
+
+    private static void startEditor(Player player, int kitNumber) {
+        if (KitEditorSessionManager.isEditing(player)) {
+            player.sendMessage(ColorizeText.hex("&#ffa6a6Finish the current edit with /k# save or /kitcancel first."));
+            return;
         }
-        return false;
+        if (!BlacklistedRegion.isInEditorRegion(player)) {
+            sendConfigMessage(player, "messages.editor_region_required", "&#ffa6a6You can only edit kits in the kit editor region.");
+            return;
+        }
+        ItemStack cursor = player.getItemOnCursor();
+        if (cursor != null && cursor.getType() != Material.AIR) {
+            player.sendMessage(ColorizeText.hex("&#ffa6a6Clear your cursor before editing a kit."));
+            return;
+        }
+
+        String kitName = "Kit " + kitNumber;
+        String guiTitle = ColorizeText.hex("&8Editing " + kitName);
+        GuiBuilder sessionInventory = new GuiBuilder(9, guiTitle);
+        KitEditorSessionManager.startSession(player, kitName, guiTitle, sessionInventory, false);
+        KitsX.getKitUtil().loadForEditor(player, kitName);
+
+        sendConfigMessage(player, "messages.kit_edit_started", "&#7cff6eEditing %kit%.", kitName, kitCommandName(kitNumber));
+        sendConfigMessage(player, "messages.kit_edit_save_hint",
+                "&#f8ff9cUse /customkit for items, /%kitcmd% save to save, or /kitcancel to cancel.",
+                kitName,
+                kitCommandName(kitNumber));
+    }
+
+    private static void sendConfigMessage(Player player, String path, String fallback) {
+        sendConfigMessage(player, path, fallback, "", "");
+    }
+
+    private static void sendConfigMessage(Player player, String path, String fallback, String kitName, String kitCommand) {
+        String message = KitsX.getInstance().getConfig().getString(path, fallback);
+        message = message.replace("%kit%", kitName).replace("%kitcmd%", kitCommand);
+        player.sendMessage(ColorizeText.hex(message));
+    }
+
+    private static String kitCommandName(int kitNumber) {
+        return "k" + kitNumber;
     }
 
     private static void addKitRoomItem(GuiBuilder inventory, Player player) {
@@ -180,10 +202,6 @@ public class KitsMenu extends GuiBuilder {
 
     private static void addClearInventoryItem(GuiBuilder inventory, Player player) {
         addItem(inventory, "kits_menu.clearinv", Material.RED_DYE, player);
-    }
-
-    private static void addPremadeKitItem(GuiBuilder inventory, Player player) {
-        addItem(inventory, "kits_menu.premadekit", Material.NETHERITE_CHESTPLATE, player);
     }
 
     @SuppressWarnings("deprecation")
@@ -237,7 +255,11 @@ public class KitsMenu extends GuiBuilder {
             Player clicker = (Player) event.getWhoClicked();
             switch (configName) {
                 case "kits_menu.kitroom":
-                    KitRoomMenu.openKitRoom(clicker).open(clicker);
+                    if (KitEditorSessionManager.isEditing(clicker)) {
+                        KitRoomMenu.openKitRoom(clicker).open(clicker);
+                    } else {
+                        clicker.sendMessage(ColorizeText.hex("&#ffa6a6Right-click a kit in the editor region before opening the item palette."));
+                    }
                     break;
                 case "kits_menu.clearinv":
                     if (KitEditorSessionManager.isEditing(clicker)) {
@@ -245,9 +267,6 @@ public class KitsMenu extends GuiBuilder {
                     } else {
                         clicker.getInventory().clear();
                     }
-                    break;
-                case "kits_menu.premadekit":
-                    PremadeKitSelectorMenu.createGui(clicker).open(clicker);
                     break;
             }
         });

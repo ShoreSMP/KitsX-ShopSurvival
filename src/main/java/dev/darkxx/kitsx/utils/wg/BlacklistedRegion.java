@@ -29,6 +29,7 @@ import com.sk89q.worldguard.protection.regions.RegionContainer;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import dev.darkxx.kitsx.KitsX;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -36,17 +37,30 @@ import java.util.List;
 public class BlacklistedRegion {
 
     public static boolean isInBlacklistedRegion(Player player) {
-        List<String> blacklistedRegions = KitsX.getInstance().getConfig().getStringList("blacklisted_regions");
+        return isInConfiguredRegion(player.getLocation(), KitsX.getInstance().getConfig().getStringList("blacklisted_regions"));
+    }
 
+    public static boolean isInEditorRegion(Player player) {
+        return isInEditorRegion(player, player.getLocation());
+    }
+
+    public static boolean isInEditorRegion(Player player, Location location) {
+        return isInConfiguredRegion(location, KitsX.getInstance().getConfig().getStringList("editor_regions"));
+    }
+
+    private static boolean isInConfiguredRegion(Location location, List<String> regionIds) {
+        if (regionIds == null || regionIds.isEmpty()) {
+            return false;
+        }
         WorldGuardPlugin wg = getWorldGuard();
         if (wg == null) {
             return false;
         }
 
         RegionContainer container = WorldGuard.getInstance().getPlatform().getRegionContainer();
-        ApplicableRegionSet set = container.createQuery().getApplicableRegions(BukkitAdapter.adapt(player.getLocation()));
+        ApplicableRegionSet set = container.createQuery().getApplicableRegions(BukkitAdapter.adapt(location));
         for (ProtectedRegion region : set) {
-            if (blacklistedRegions.contains(region.getId())) {
+            if (regionIds.contains(region.getId())) {
                 return true;
             }
         }
