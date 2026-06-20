@@ -41,7 +41,12 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.CraftItemEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
@@ -246,6 +251,54 @@ public final class KitEditorListener implements Listener {
         }
     }
 
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player) || !KitEditorSessionManager.isEditing(player)) {
+            return;
+        }
+        if (!isUnsafeCraftingSlot(event)) {
+            return;
+        }
+        event.setCancelled(true);
+        KitEditorSessionManager.flushCraftingSlots(player, event.getView().getTopInventory());
+        sendEditingBlockedMessage(player);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
+    public void onInventoryDrag(InventoryDragEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player) || !KitEditorSessionManager.isEditing(player)) {
+            return;
+        }
+        InventoryType topType = event.getView().getTopInventory().getType();
+        int topSize = event.getView().getTopInventory().getSize();
+        boolean touchesCraftingSlot = event.getRawSlots().stream()
+            .anyMatch(slot -> isRawCraftingSlot(topType, slot, topSize));
+        if (!touchesCraftingSlot) {
+            return;
+        }
+        event.setCancelled(true);
+        KitEditorSessionManager.flushCraftingSlots(player, event.getView().getTopInventory());
+        sendEditingBlockedMessage(player);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
+    public void onCraftItem(CraftItemEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player) || !KitEditorSessionManager.isEditing(player)) {
+            return;
+        }
+        event.setCancelled(true);
+        KitEditorSessionManager.flushCraftingSlots(player);
+        sendEditingBlockedMessage(player);
+    }
+
+    @EventHandler(ignoreCancelled = false)
+    public void onPrepareItemCraft(PrepareItemCraftEvent event) {
+        if (!(event.getView().getPlayer() instanceof Player player) || !KitEditorSessionManager.isEditing(player)) {
+            return;
+        }
+        event.getInventory().setResult(new ItemStack(Material.AIR));
+    }
+
     @EventHandler(priority = EventPriority.LOWEST)
     public void onInventoryClose(InventoryCloseEvent event) {
         if (!(event.getPlayer() instanceof Player player)) {
@@ -254,11 +307,28 @@ public final class KitEditorListener implements Listener {
         if (!KitEditorSessionManager.isEditing(player)) {
             return;
         }
+        KitEditorSessionManager.flushCraftingSlots(player, event.getInventory());
         ItemStack cursor = player.getItemOnCursor();
         if (cursor != null && cursor.getType() != Material.AIR) {
             player.setItemOnCursor(new ItemStack(Material.AIR));
         }
         KitEditorSessionManager.setPaletteOpen(player, false);
+    }
+
+    private boolean isUnsafeCraftingSlot(InventoryClickEvent event) {
+        InventoryType.SlotType slotType = event.getSlotType();
+        if (slotType == InventoryType.SlotType.CRAFTING || slotType == InventoryType.SlotType.RESULT) {
+            return true;
+        }
+        InventoryType topType = event.getView().getTopInventory().getType();
+        int topSize = event.getView().getTopInventory().getSize();
+        return isRawCraftingSlot(topType, event.getRawSlot(), topSize);
+    }
+
+    private boolean isRawCraftingSlot(InventoryType topType, int rawSlot, int topSize) {
+        return (topType == InventoryType.CRAFTING || topType == InventoryType.WORKBENCH)
+            && rawSlot >= 0
+            && rawSlot < topSize;
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)

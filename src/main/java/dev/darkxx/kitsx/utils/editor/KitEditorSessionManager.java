@@ -27,6 +27,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.jetbrains.annotations.NotNull;
@@ -55,6 +57,7 @@ public final class KitEditorSessionManager {
                                                 @NotNull GuiBuilder inventory,
                                                 boolean paletteOpen) {
         endSession(player);
+        flushCraftingSlots(player);
 
         PlayerInventory playerInventory = player.getInventory();
         ItemStack[] inventorySnapshot = copyInventory(playerInventory.getContents());
@@ -85,6 +88,7 @@ public final class KitEditorSessionManager {
     public static void endSession(@NotNull Player player) {
         KitEditorSession session = SESSIONS.remove(player.getUniqueId());
         if (session != null) {
+            flushCraftingSlots(player);
             player.setItemOnCursor(new ItemStack(Material.AIR));
             restorePlayerInventory(player.getInventory(), session);
             player.updateInventory();
@@ -159,6 +163,30 @@ public final class KitEditorSessionManager {
         return false;
     }
 
+    public static void flushCraftingSlots(@NotNull Player player) {
+        flushCraftingSlots(player, player.getOpenInventory().getTopInventory());
+    }
+
+    public static void flushCraftingSlots(@NotNull Player player, @NotNull Inventory topInventory) {
+        InventoryType type = topInventory.getType();
+        if (type != InventoryType.CRAFTING && type != InventoryType.WORKBENCH) {
+            return;
+        }
+
+        if (topInventory.getSize() > 0) {
+            topInventory.setItem(0, new ItemStack(Material.AIR));
+        }
+        for (int slot = 1; slot < topInventory.getSize(); slot++) {
+            ItemStack item = topInventory.getItem(slot);
+            if (isEmpty(item)) {
+                continue;
+            }
+            topInventory.setItem(slot, new ItemStack(Material.AIR));
+            player.getInventory().addItem(item.clone());
+        }
+        player.updateInventory();
+    }
+
     private static void restorePlayerInventory(@NotNull PlayerInventory inventory, @NotNull KitEditorSession session) {
         inventory.clear();
         inventory.setStorageContents(copyInventory(session.getInventorySnapshot()));
@@ -186,5 +214,9 @@ public final class KitEditorSessionManager {
 
     private static ItemStack cloneItem(ItemStack item) {
         return item == null ? null : item.clone();
+    }
+
+    private static boolean isEmpty(ItemStack item) {
+        return item == null || item.getType() == Material.AIR;
     }
 }

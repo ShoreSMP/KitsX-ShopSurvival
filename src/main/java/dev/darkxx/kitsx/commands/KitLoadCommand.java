@@ -111,6 +111,7 @@ public class KitLoadCommand extends XyrisCommand<KitsX> {
             return;
         }
 
+        KitEditorSessionManager.flushCraftingSlots(player);
         InventorySnapshot snapshot = InventorySnapshot.fromPlayer(player);
         KitsX.getKitUtil().saveSnapshot(player, targetKit,
                 snapshot.getStorageContents(),
