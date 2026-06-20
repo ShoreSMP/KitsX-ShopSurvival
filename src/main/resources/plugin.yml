@@ -11,6 +11,7 @@ authors:
 softdepend:
   - WorldGuard
   - Skript
+  - ExcellentCrates
 # dependencies:
 #  server:
 #    WorldGuard:

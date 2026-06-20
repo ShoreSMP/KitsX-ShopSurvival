@@ -93,6 +93,7 @@ public final class KitsX extends PluginWrapper {
         new PremadeKitCommand(this);
 
         Servers.server().getPluginManager().registerEvents(new KitEditorListener(), this);
+        KitEditorListener.registerExternalGuards(this);
 
         Metrics metrics = new Metrics(this, 22161);
         HooksImpl.of(this);

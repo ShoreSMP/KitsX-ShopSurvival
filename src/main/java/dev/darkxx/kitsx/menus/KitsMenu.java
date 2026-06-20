@@ -169,6 +169,27 @@ public class KitsMenu extends GuiBuilder {
             return;
         }
 
+        player.closeInventory();
+        PLUGIN.getServer().getScheduler().runTask(PLUGIN, () -> startEditorAfterInventorySettles(player, kitNumber));
+    }
+
+    private static void startEditorAfterInventorySettles(Player player, int kitNumber) {
+        if (!player.isOnline()) {
+            return;
+        }
+        if (KitEditorSessionManager.isEditing(player)) {
+            return;
+        }
+        if (!BlacklistedRegion.isInEditorRegion(player)) {
+            sendConfigMessage(player, "messages.editor_region_required", "&#ffa6a6You can only edit kits in the kit editor region.");
+            return;
+        }
+        ItemStack cursor = player.getItemOnCursor();
+        if (cursor != null && cursor.getType() != Material.AIR) {
+            player.sendMessage(ColorizeText.hex("&#ffa6a6Clear your cursor before editing a kit."));
+            return;
+        }
+
         String kitName = "Kit " + kitNumber;
         String guiTitle = ColorizeText.hex("&8Editing " + kitName);
         GuiBuilder sessionInventory = new GuiBuilder(9, guiTitle);

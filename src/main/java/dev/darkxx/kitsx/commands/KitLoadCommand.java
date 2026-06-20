@@ -111,14 +111,13 @@ public class KitLoadCommand extends XyrisCommand<KitsX> {
             return;
         }
 
-        KitEditorSessionManager.flushCraftingSlots(player);
+        KitEditorSessionManager.cleanupTransientState(player);
         InventorySnapshot snapshot = InventorySnapshot.fromPlayer(player);
         KitsX.getKitUtil().saveSnapshot(player, targetKit,
                 snapshot.getStorageContents(),
                 snapshot.getArmorContents(),
                 snapshot.getOffhandItem());
         KitEditorSessionManager.endSession(player);
-        player.closeInventory();
     }
 
     private boolean isSaveAlias(String arg) {

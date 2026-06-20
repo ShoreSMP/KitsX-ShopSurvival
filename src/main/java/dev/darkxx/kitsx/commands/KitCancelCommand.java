@@ -52,7 +52,6 @@ public class KitCancelCommand extends XyrisCommand<KitsX> {
             return true;
         }
         KitEditorSessionManager.endSession(player);
-        player.closeInventory();
         player.sendMessage(ColorizeText.hex("&#ff2e2eKit editing has been cancelled."));
         return true;
     }

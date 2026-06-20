@@ -57,7 +57,9 @@ public final class KitEditorSessionManager {
                                                 @NotNull GuiBuilder inventory,
                                                 boolean paletteOpen) {
         endSession(player);
-        flushCraftingSlots(player);
+        // Let Bukkit return any normal pre-editor crafting matrix contents before the original snapshot.
+        player.closeInventory();
+        cleanupTransientState(player);
 
         PlayerInventory playerInventory = player.getInventory();
         ItemStack[] inventorySnapshot = copyInventory(playerInventory.getContents());
@@ -86,12 +88,16 @@ public final class KitEditorSessionManager {
     }
 
     public static void endSession(@NotNull Player player) {
-        KitEditorSession session = SESSIONS.remove(player.getUniqueId());
+        KitEditorSession session = SESSIONS.get(player.getUniqueId());
         if (session != null) {
-            flushCraftingSlots(player);
-            player.setItemOnCursor(new ItemStack(Material.AIR));
+            cleanupTransientState(player);
+            // Close before restoring so Bukkit resolves crafting matrix state before originals are written back.
+            player.closeInventory();
+            cleanupTransientState(player);
             restorePlayerInventory(player.getInventory(), session);
+            clearCursor(player);
             player.updateInventory();
+            SESSIONS.remove(player.getUniqueId());
         }
     }
 
@@ -144,7 +150,7 @@ public final class KitEditorSessionManager {
     }
 
     public static void setWorkingSnapshot(@NotNull Player player, @NotNull String kitName, @NotNull InventorySnapshot snapshot) {
-        // Compatibility no-op: kit edits now save only the quarantined live player inventory.
+        // Compatibility no-op: kit edits now save only the live player inventory.
     }
 
     public static InventorySnapshot getWorkingSnapshot(@NotNull Player player, @NotNull String kitName) {
@@ -161,6 +167,18 @@ public final class KitEditorSessionManager {
 
     public static boolean addItemToWorkingSnapshot(@NotNull Player player, @NotNull ItemStack item) {
         return false;
+    }
+
+    public static void cleanupTransientState(@NotNull Player player) {
+        clearCursor(player);
+        flushCraftingSlots(player);
+        player.updateInventory();
+    }
+
+    public static void clearCursor(@NotNull Player player) {
+        ItemStack air = new ItemStack(Material.AIR);
+        player.setItemOnCursor(air);
+        player.getOpenInventory().setCursor(air);
     }
 
     public static void flushCraftingSlots(@NotNull Player player) {
@@ -182,7 +200,6 @@ public final class KitEditorSessionManager {
                 continue;
             }
             topInventory.setItem(slot, new ItemStack(Material.AIR));
-            player.getInventory().addItem(item.clone());
         }
         player.updateInventory();
     }
