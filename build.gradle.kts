@@ -1,5 +1,5 @@
 plugins {
-    id("com.shoresmp.publish-conventions") version "1.0.0"
+    id("com.shoresmp.publish-conventions") version "1.0.1"
 
     `java-library`
     id("com.github.johnrengelman.shadow") version "7.1.2"
