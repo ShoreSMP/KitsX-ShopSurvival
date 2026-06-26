@@ -1,4 +1,6 @@
 plugins {
+    id("com.shoresmp.publish-conventions") version "1.0.0"
+
     `java-library`
     id("com.github.johnrengelman.shadow") version "7.1.2"
     `maven-publish`
