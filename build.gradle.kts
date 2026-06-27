@@ -19,6 +19,7 @@ java {
 }
 
 repositories {
+    maven { url 'https://repo.shoresmp.net/private' }
     mavenCentral()
     mavenLocal()
     maven("https://repo.papermc.io/repository/maven-public/")
@@ -59,6 +60,7 @@ publishing {
         }
     }
     repositories {
+    maven { url 'https://repo.shoresmp.net/private' }
         maven {
             url = uri("file://${System.getProperty("user.home")}/.m2/repository")
         }
