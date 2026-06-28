@@ -19,7 +19,14 @@ java {
 }
 
 repositories {
-    maven { url 'https://repo.shoresmp.net/private' }
+    maven {
+        url = uri("https://repo.shoresmp.net/private")
+        credentials {
+            username = project.findProperty("reposiliteUsername") as String?
+            password = project.findProperty("reposiliteToken") as String?
+        }
+    }
+    
     mavenCentral()
     mavenLocal()
     maven("https://repo.papermc.io/repository/maven-public/")
@@ -60,7 +67,14 @@ publishing {
         }
     }
     repositories {
-    maven { url 'https://repo.shoresmp.net/private' }
+    maven {
+        url = uri("https://repo.shoresmp.net/private")
+        credentials {
+            username = project.findProperty("reposiliteUsername") as String?
+            password = project.findProperty("reposiliteToken") as String?
+        }
+    }
+    
         maven {
             url = uri("file://${System.getProperty("user.home")}/.m2/repository")
         }
