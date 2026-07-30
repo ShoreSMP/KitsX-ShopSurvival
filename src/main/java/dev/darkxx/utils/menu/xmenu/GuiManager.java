@@ -49,7 +49,10 @@ public final class GuiManager implements Listener {
         if (builder == null) {
             return;
         }
-        event.setCancelled(true);
+        boolean safePlayerInventoryEdit = !event.isCancelled()
+            && builder.allowsPlayerInventoryClicks()
+            && isSafePlayerInventoryEdit(event);
+        event.setCancelled(!safePlayerInventoryEdit);
 
         Consumer<InventoryClickEvent> slotHandler = builder.getSlotHandler(event.getRawSlot());
         if (slotHandler != null) {
@@ -58,7 +61,7 @@ public final class GuiManager implements Listener {
         for (Consumer<InventoryClickEvent> handler : builder.getGlobalHandlers()) {
             handler.accept(event);
         }
-        if (!event.isCancelled() && !isSafeTopInventoryEdit(event)) {
+        if (!event.isCancelled() && !safePlayerInventoryEdit && !isSafeTopInventoryEdit(event)) {
             event.setCancelled(true);
         }
     }
@@ -109,6 +112,28 @@ public final class GuiManager implements Listener {
             || click == ClickType.DOUBLE_CLICK
             || click == ClickType.MIDDLE
             || click == ClickType.CREATIVE) {
+            return false;
+        }
+
+        InventoryAction action = event.getAction();
+        return action == InventoryAction.NOTHING
+            || action == InventoryAction.PICKUP_ALL
+            || action == InventoryAction.PICKUP_HALF
+            || action == InventoryAction.PICKUP_ONE
+            || action == InventoryAction.PICKUP_SOME
+            || action == InventoryAction.PLACE_ALL
+            || action == InventoryAction.PLACE_ONE
+            || action == InventoryAction.PLACE_SOME
+            || action == InventoryAction.SWAP_WITH_CURSOR;
+    }
+
+    private boolean isSafePlayerInventoryEdit(InventoryClickEvent event) {
+        if (event.getClickedInventory() != event.getView().getBottomInventory()) {
+            return false;
+        }
+
+        ClickType click = event.getClick();
+        if (click != ClickType.LEFT && click != ClickType.RIGHT) {
             return false;
         }
 

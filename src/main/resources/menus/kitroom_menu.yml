@@ -60,6 +60,14 @@ kit_room:
       enchanted: false
       category: "MISC"
 
+    reset:
+      material: RED_DYE
+      name: "&#ff2e2eReset Kit"
+      lore:
+        - "&7Clear every item from this kit"
+      slot: 52
+      enchanted: false
+
     back:
       material: RED_STAINED_GLASS_PANE
       name: "&#ffa6a6Back"

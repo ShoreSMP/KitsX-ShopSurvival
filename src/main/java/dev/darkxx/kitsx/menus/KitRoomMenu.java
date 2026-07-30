@@ -35,6 +35,7 @@ public class KitRoomMenu extends GuiBuilder {
             inventory.addClickHandler(event -> event.setCancelled(true));
             return inventory;
         }
+        inventory.allowPlayerInventoryClicks();
         KitEditorSessionManager.updateGui(player, inventory, inventoryTitle);
 
         ConfigurationSection itemsSection = CONFIG.getConfig().getConfigurationSection("kit_room.items");
@@ -42,6 +43,9 @@ public class KitRoomMenu extends GuiBuilder {
         KitsX.getKitRoomUtil().load(inventory, "CRYSTAL_PVP");
         if (itemsSection != null) {
             for (String key : itemsSection.getKeys(false)) {
+                if (key.equalsIgnoreCase("reset")) {
+                    continue;
+                }
                 ConfigurationSection itemSection = itemsSection.getConfigurationSection(key);
                 if (itemSection != null) {
                     Material material = Material.valueOf(itemSection.getString("material", "STONE"));
@@ -87,6 +91,7 @@ public class KitRoomMenu extends GuiBuilder {
                 }
             }
         }
+        addResetItem(inventory);
 
         inventory.addClickHandler(event -> {
             int slot = event.getRawSlot();
@@ -100,7 +105,8 @@ public class KitRoomMenu extends GuiBuilder {
                 if (clicked == null || clicked.getType() == Material.AIR) {
                     return;
                 }
-                addPaletteItemToLiveInventory(clicker, clicked);
+                clicker.setItemOnCursor(clicked.clone());
+                clicker.updateInventory();
             }
         });
 
@@ -111,14 +117,29 @@ public class KitRoomMenu extends GuiBuilder {
         return clickType == ClickType.LEFT || clickType == ClickType.RIGHT;
     }
 
-    private static void addPaletteItemToLiveInventory(Player player, ItemStack sourceItem) {
-        ItemStack clone = sourceItem.clone();
-        Map<Integer, ItemStack> leftovers = player.getInventory().addItem(clone);
-        if (!leftovers.isEmpty()) {
-            player.sendMessage(ColorizeText.hex("&#ffa6a6Your kit editor inventory is full."));
-            return;
-        }
-        player.updateInventory();
+    private static void addResetItem(GuiBuilder inventory) {
+        String path = "kit_room.items.reset";
+        Material material = Material.valueOf(CONFIG.getConfig().getString(path + ".material", "RED_DYE"));
+        String name = CONFIG.getConfig().getString(path + ".name", "&#ff2e2eReset Kit");
+        List<String> lore = CONFIG.getConfig().contains(path + ".lore")
+                ? CONFIG.getConfig().getStringList(path + ".lore")
+                : List.of("&7Clear every item from this kit");
+        int slot = CONFIG.getConfig().getInt(path + ".slot", 52);
+
+        ItemStack item = new ItemBuilderGUI(material)
+                .name(ColorizeText.hex(name))
+                .lore(lore.toArray(new String[0]))
+                .flags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS)
+                .build();
+
+        inventory.setItem(slot, item, event -> {
+            Player clicker = (Player) event.getWhoClicked();
+            KitEditorSessionManager.clearCursor(clicker);
+            clicker.getInventory().clear();
+            clicker.getInventory().setArmorContents(new ItemStack[4]);
+            clicker.getInventory().setItemInOffHand(null);
+            clicker.updateInventory();
+        });
     }
 
     public static void setCurrentCategory(Player player, String category) {

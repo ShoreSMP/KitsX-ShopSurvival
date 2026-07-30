@@ -21,6 +21,7 @@ public class GuiBuilder implements InventoryHolder {
     private final Map<Integer, Consumer<InventoryClickEvent>> slotHandlers = new HashMap<>();
     private final List<Consumer<InventoryClickEvent>> globalHandlers = new ArrayList<>();
     private final List<Consumer<InventoryOpenEvent>> openHandlers = new ArrayList<>();
+    private boolean playerInventoryClicksAllowed;
 
     public GuiBuilder(int size) {
         this.inventory = Bukkit.createInventory(this, size);
@@ -51,6 +52,14 @@ public class GuiBuilder implements InventoryHolder {
 
     public void addOpenHandler(Consumer<InventoryOpenEvent> handler) {
         openHandlers.add(handler);
+    }
+
+    public void allowPlayerInventoryClicks() {
+        playerInventoryClicksAllowed = true;
+    }
+
+    public boolean allowsPlayerInventoryClicks() {
+        return playerInventoryClicksAllowed;
     }
 
     public Consumer<InventoryClickEvent> getSlotHandler(int slot) {
