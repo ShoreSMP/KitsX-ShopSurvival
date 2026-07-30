@@ -1,4 +1,6 @@
 plugins {
+    id("com.shoresmp.publish-conventions") version "1.0.1"
+
     `java-library`
     id("com.github.johnrengelman.shadow") version "7.1.2"
     `maven-publish`
@@ -17,6 +19,14 @@ java {
 }
 
 repositories {
+    maven {
+        url = uri("https://repo.shoresmp.net/private")
+        credentials {
+            username = project.findProperty("reposiliteUsername") as String?
+            password = project.findProperty("reposiliteToken") as String?
+        }
+    }
+    
     mavenCentral()
     mavenLocal()
     maven("https://repo.papermc.io/repository/maven-public/")
@@ -57,6 +67,14 @@ publishing {
         }
     }
     repositories {
+    maven {
+        url = uri("https://repo.shoresmp.net/private")
+        credentials {
+            username = project.findProperty("reposiliteUsername") as String?
+            password = project.findProperty("reposiliteToken") as String?
+        }
+    }
+    
         maven {
             url = uri("file://${System.getProperty("user.home")}/.m2/repository")
         }

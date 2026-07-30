@@ -1,8 +1,8 @@
 name: KitsX
 description: A modern kits plugin for the Crystal PvP server.
 main: dev.darkxx.kitsx.KitsX
-version: '1.0.3'
-api-version: '1.21'
+version: '${version}'
+api-version: '${version}'
 website: https://xyris.fun/
 authors:
   - Darkxx
