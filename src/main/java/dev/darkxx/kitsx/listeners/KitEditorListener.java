@@ -86,12 +86,12 @@ public final class KitEditorListener implements Listener {
 
     private static void cleanupTransientAfterInventoryTransaction(Player player) {
         KitsX plugin = KitsX.getInstance();
-        plugin.getServer().getScheduler().runTask(plugin, () -> {
+        plugin.getShoreScheduler().entity(player, () -> {
             if (!player.isOnline() || !KitEditorSessionManager.isEditing(player)) {
                 return;
             }
             KitEditorSessionManager.cleanupTransientState(player);
-        });
+        }, null);
     }
 
     public static void registerExternalGuards(KitsX plugin) {

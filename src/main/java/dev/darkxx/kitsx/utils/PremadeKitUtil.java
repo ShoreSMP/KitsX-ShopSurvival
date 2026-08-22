@@ -13,6 +13,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,7 +21,7 @@ public class PremadeKitUtil implements PremadeKitAPI {
 
     private static ConfigManager configManager;
     private final Logger logger = Logger.getLogger(PremadeKitUtil.class.getName());
-    private final Map<String, Long> lastBroadcastTime = new HashMap<>();
+    private final Map<String, Long> lastBroadcastTime = new ConcurrentHashMap<>();
 
     public PremadeKitUtil(ConfigManager configManager) {
         PremadeKitUtil.configManager = configManager;
@@ -32,7 +33,7 @@ public class PremadeKitUtil implements PremadeKitAPI {
     }
 
     @Override
-    public void save(Player player, String kitName) {
+    public synchronized void save(Player player, String kitName) {
         try {
             InventorySnapshot snapshot = InventorySnapshot.fromPlayer(player);
             List<ItemStack> inventoryList = Arrays.asList(snapshot.getStorageContents());
@@ -83,7 +84,7 @@ public class PremadeKitUtil implements PremadeKitAPI {
                 String bcastLoaded = KitsX.getInstance().getConfig().getString("broadcast.premadekit_load_message");
                 if (bcastLoaded != null) {
                     bcastLoaded = bcastLoaded.replace("%player%", player.getName()).replace("%kit%", kitName);
-                    Bukkit.broadcastMessage(ColorizeText.hex(bcastLoaded));
+                    KitsX.getInstance().broadcast(ColorizeText.hex(bcastLoaded));
                 }
                 lastBroadcastTime.put(playerName, currentTime);
             }
@@ -107,7 +108,7 @@ public class PremadeKitUtil implements PremadeKitAPI {
     }
 
     @SuppressWarnings("unchecked")
-    private InventorySnapshot getSnapshot(String kitName) {
+    private synchronized InventorySnapshot getSnapshot(String kitName) {
         ConfigurationSection kitSection = configManager.getConfig("data/premadekit.yml").getConfigurationSection("kits." + kitName);
         if (kitSection == null) {
             return null;
@@ -136,7 +137,7 @@ public class PremadeKitUtil implements PremadeKitAPI {
     }
 
     @Override
-    public void saveAll() {
+    public synchronized void saveAll() {
         try {
             configManager.saveConfig("data/premadekit.yml");
         } catch (Exception e) {

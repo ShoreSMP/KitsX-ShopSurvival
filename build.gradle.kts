@@ -7,12 +7,12 @@ plugins {
 group = "dev.darkxx"
 version = "1.0.3"
 description = "KitsX"
-java.sourceCompatibility = JavaVersion.toVersion(23)
-java.targetCompatibility = JavaVersion.toVersion(23)
+java.sourceCompatibility = JavaVersion.VERSION_21
+java.targetCompatibility = JavaVersion.VERSION_21
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(23))
+        languageVersion.set(JavaLanguageVersion.of(24))
     }
 }
 
@@ -26,12 +26,13 @@ repositories {
 }
 
 dependencies {
-    implementation("org.projectlombok:lombok:1.18.30")
+    implementation("org.projectlombok:lombok:1.18.38")
+    implementation("me.notzorba:shore-scheduler:1.0.0-SNAPSHOT")
 
-    compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
     compileOnly("com.github.SkriptLang:Skript:dev37c")
     compileOnly("com.sk89q.worldguard:worldguard-bukkit:7.0.9")
-    annotationProcessor("org.projectlombok:lombok:1.18.30")
+    annotationProcessor("org.projectlombok:lombok:1.18.38")
 }
 
 tasks.build {
@@ -40,6 +41,7 @@ tasks.build {
 
 tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
+    options.release.set(21)
     options.compilerArgs.add("-parameters")
 }
 

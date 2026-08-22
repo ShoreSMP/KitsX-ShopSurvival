@@ -3,6 +3,7 @@ description: A modern kits plugin for the Crystal PvP server.
 main: dev.darkxx.kitsx.KitsX
 version: '${version}'
 api-version: '1.21'
+folia-supported: true
 website: https://xyris.fun/
 authors:
   - Darkxx

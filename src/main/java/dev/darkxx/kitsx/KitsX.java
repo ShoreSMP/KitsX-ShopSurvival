@@ -37,7 +37,10 @@ import dev.darkxx.utils.misc.Versions;
 import dev.darkxx.utils.server.Servers;
 import dev.darkxx.utils.text.color.ColorizeText;
 import lombok.Getter;
+import me.notzorba.shorescheduler.ShoreScheduler;
+import org.bukkit.Bukkit;
 import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.entity.Player;
 
 public final class KitsX extends PluginWrapper {
 
@@ -51,10 +54,14 @@ public final class KitsX extends PluginWrapper {
     private static KitRoomUtil kitRoomUtil;
     @Getter
     private static AutoRekitUtil autoRekitUtil;
+    @Getter
+    private ShoreScheduler shoreScheduler;
+    private Metrics metrics;
 
     @Override
     protected void start() {
         instance = this;
+        shoreScheduler = new ShoreScheduler(this);
         Utils.init(this, false);
         GuiManager.register(this);
         saveDefaultConfig();
@@ -95,7 +102,7 @@ public final class KitsX extends PluginWrapper {
         Servers.server().getPluginManager().registerEvents(new KitEditorListener(), this);
         KitEditorListener.registerExternalGuards(this);
 
-        Metrics metrics = new Metrics(this, 22161);
+        metrics = new Metrics(this, 22161);
         HooksImpl.of(this);
 
         log.sendMessage(ColorizeText.hex("&c&lKitsX &7› &fThe &#ff2e2eplugin &fhas been successfully enabled, created by &#ff2e2eXyrisPlugins &fwith &#ff2e2e❤"));
@@ -104,9 +111,21 @@ public final class KitsX extends PluginWrapper {
 
     @Override
     protected void stop() {
+        if (metrics != null) {
+            metrics.shutdown();
+            metrics = null;
+        }
         KitEditorSessionManager.endAllSessions();
         getKitUtil().saveAll();
         getPremadeKitUtil().saveAll();
+    }
+
+    public void broadcast(String message) {
+        shoreScheduler.global(() -> {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                shoreScheduler.entity(player, () -> player.sendMessage(message), null);
+            }
+        });
     }
 
     private boolean rekit() {

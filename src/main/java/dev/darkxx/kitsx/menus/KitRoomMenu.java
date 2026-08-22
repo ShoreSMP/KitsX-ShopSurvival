@@ -15,14 +15,15 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class KitRoomMenu extends GuiBuilder {
 
     private static final MenuConfig CONFIG = new MenuConfig(KitsX.getInstance(), "menus/kitroom_menu.yml");
-    private static final Map<Player, String> currentCategoryMap = new HashMap<>();
+    private static final Map<UUID, String> currentCategoryMap = new ConcurrentHashMap<>();
     public KitRoomMenu() {
         super(54);
     }
@@ -143,10 +144,10 @@ public class KitRoomMenu extends GuiBuilder {
     }
 
     public static void setCurrentCategory(Player player, String category) {
-        currentCategoryMap.put(player, category);
+        currentCategoryMap.put(player.getUniqueId(), category);
     }
 
     public static String getCurrentCategory(Player player) {
-        return currentCategoryMap.getOrDefault(player, "null");
+        return currentCategoryMap.getOrDefault(player.getUniqueId(), "null");
     }
 }

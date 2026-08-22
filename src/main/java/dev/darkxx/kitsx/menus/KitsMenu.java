@@ -170,7 +170,7 @@ public class KitsMenu extends GuiBuilder {
         }
 
         player.closeInventory();
-        PLUGIN.getServer().getScheduler().runTask(PLUGIN, () -> startEditorAfterInventorySettles(player, kitNumber));
+        PLUGIN.getShoreScheduler().entity(player, () -> startEditorAfterInventorySettles(player, kitNumber), null);
     }
 
     private static void startEditorAfterInventorySettles(Player player, int kitNumber) {

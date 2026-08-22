@@ -37,6 +37,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -44,8 +45,8 @@ public class KitUtil implements KitsAPI {
 
     private static ConfigManager configManager;
     private final Logger logger = Logger.getLogger(KitUtil.class.getName());
-    private final Map<UUID, Long> lastKitLoadBroadcastAt = new HashMap<>();
-    private final Map<UUID, Long> kitLoadCooldowns = new HashMap<>();
+    private final Map<UUID, Long> lastKitLoadBroadcastAt = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> kitLoadCooldowns = new ConcurrentHashMap<>();
 
     public KitUtil(ConfigManager configManager) {
         KitUtil.configManager = configManager;
@@ -62,7 +63,7 @@ public class KitUtil implements KitsAPI {
         saveSnapshot(player, kitName, snapshot.getStorageContents(), snapshot.getArmorContents(), snapshot.getOffhandItem());
     }
 
-    public void saveSnapshot(@NotNull Player player,
+    public synchronized void saveSnapshot(@NotNull Player player,
                              @NotNull String kitName,
                              @NotNull ItemStack[] inventoryContents,
                              @NotNull ItemStack[] armorContents,
@@ -168,7 +169,7 @@ public class KitUtil implements KitsAPI {
         return false;
     }
 
-    private InventorySnapshot getSnapshot(@NotNull Player player, @NotNull String kitName) {
+    private synchronized InventorySnapshot getSnapshot(@NotNull Player player, @NotNull String kitName) {
         String playerName = player.getUniqueId().toString();
         if (!configManager.contains("data/kits.yml", playerName + "." + kitName)) {
             return null;
@@ -218,7 +219,7 @@ public class KitUtil implements KitsAPI {
                 continue;
             }
             String rendered = line.replace("%player%", player.getName()).replace("%kit%", kitName);
-            Bukkit.broadcastMessage(ColorizeText.hex(rendered));
+            KitsX.getInstance().broadcast(ColorizeText.hex(rendered));
         }
         lastKitLoadBroadcastAt.put(player.getUniqueId(), currentTime);
     }
@@ -347,7 +348,7 @@ public class KitUtil implements KitsAPI {
     }
 
     @Override
-    public void delete(@NotNull Player player, String kitName) {
+    public synchronized void delete(@NotNull Player player, String kitName) {
         String playerName = player.getUniqueId().toString();
 
         configManager.set("data/kits.yml", playerName + "." + kitName, null);
@@ -360,13 +361,13 @@ public class KitUtil implements KitsAPI {
     }
 
     @Override
-    public boolean exists(@NotNull Player player, String kitName) {
+    public synchronized boolean exists(@NotNull Player player, String kitName) {
         String playerName = player.getUniqueId().toString();
         return configManager.contains("data/kits.yml", playerName + "." + kitName);
     }
 
     @Override
-    public void saveAll() {
+    public synchronized void saveAll() {
         try {
             configManager.saveConfig("data/kits.yml");
         } catch (Exception e) {

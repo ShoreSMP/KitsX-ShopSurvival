@@ -33,6 +33,10 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.function.Function;
+
 public class SkriptHook {
 
     @Contract(value = " -> new", pure = true)
@@ -43,41 +47,61 @@ public class SkriptHook {
     public void of() {
         // Kit Load Event
         Skript.registerEvent("Kit Load", SimpleEvent.class, KitLoadEvent.class, "[kit] load");
-        EventValues.registerEventValue(KitLoadEvent.class, Player.class, new Getter<Player, KitLoadEvent>() {
-            @Override
-            public Player get(KitLoadEvent e) {
-                return e.getPlayer();
-            }
-        }, 0);
-        EventValues.registerEventValue(KitLoadEvent.class, String.class, new Getter<String, KitLoadEvent>() {
-            @Override
-            public String get(KitLoadEvent e) {
-                return e.getKitName();
-            }
-        }, 0);
+        registerEventValue(KitLoadEvent.class, Player.class, KitLoadEvent::getPlayer);
+        registerEventValue(KitLoadEvent.class, String.class, KitLoadEvent::getKitName);
 
         // Kit Save Event
         Skript.registerEvent("Kit Save", SimpleEvent.class, KitSaveEvent.class, "[kit] save");
-        EventValues.registerEventValue(KitSaveEvent.class, Player.class, new Getter<Player, KitSaveEvent>() {
-            @Override
-            public Player get(KitSaveEvent e) {
-                return e.getPlayer();
-            }
-        }, 0);
+        registerEventValue(KitSaveEvent.class, Player.class, KitSaveEvent::getPlayer);
 
         // KitRoom Open Event
         Skript.registerEvent("KitRoom Open Event", SimpleEvent.class, KitRoomOpenEvent.class, "[kitroom] open");
-        EventValues.registerEventValue(KitRoomOpenEvent.class, Player.class, new Getter<Player, KitRoomOpenEvent>() {
-            @Override
-            public Player get(KitRoomOpenEvent e) {
-                return e.getPlayer();
-            }
-        }, 0);
+        registerEventValue(KitRoomOpenEvent.class, Player.class, KitRoomOpenEvent::getPlayer);
 
         // Conditions
         Skript.registerCondition(CondEqualsKit.class,
                 "[kit] (is|equals|matches) %string%",
                 "[kit] (is(n't| not)|is not|doesn't equal|isn't equal to|doesn't match|isn't matching) %string%"
         );
+    }
+
+    private static <E extends org.bukkit.event.Event, T> void registerEventValue(
+            Class<E> eventClass,
+            Class<T> valueClass,
+            Function<E, T> getter
+    ) {
+        try {
+            Class<?> converterClass = Class.forName("org.skriptlang.skript.lang.converter.Converter");
+            Method modernRegistration = EventValues.class.getMethod(
+                    "registerEventValue",
+                    Class.class,
+                    Class.class,
+                    converterClass,
+                    int.class
+            );
+            Object converter = Proxy.newProxyInstance(
+                    converterClass.getClassLoader(),
+                    new Class<?>[]{converterClass},
+                    (proxy, method, args) -> {
+                        if (method.getName().equals("convert")) {
+                            return getter.apply(eventClass.cast(args[0]));
+                        }
+                        if (method.getName().equals("toString")) {
+                            return "KitsX event value converter";
+                        }
+                        return null;
+                    }
+            );
+            modernRegistration.invoke(null, eventClass, valueClass, converter, 0);
+        } catch (ClassNotFoundException | NoSuchMethodException ignored) {
+            EventValues.registerEventValue(eventClass, valueClass, new Getter<T, E>() {
+                @Override
+                public T get(E event) {
+                    return getter.apply(event);
+                }
+            }, 0);
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Could not register Skript event value", exception);
+        }
     }
 }

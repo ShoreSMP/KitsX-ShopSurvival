@@ -28,6 +28,8 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.logging.Level;
+
 public class HooksImpl {
 
     public static void of(@NotNull JavaPlugin plugin) {
@@ -41,8 +43,13 @@ public class HooksImpl {
             }
             if (isPluginEnabled(pm, supportedPlugin)) {
                 log.sendMessage(ColorizeText.hex("&c&lKitsX &7› &fFound &#ff2e2e" + supportedPlugin.getName() + "&f, Hooking into it"));
-                supportedPlugin.hook();
-                log.sendMessage(ColorizeText.hex("&c&lKitsX &7› &fHooked into &#ff2e2e" + supportedPlugin.getName() + "&f!"));
+                try {
+                    supportedPlugin.hook();
+                    log.sendMessage(ColorizeText.hex("&c&lKitsX &7› &fHooked into &#ff2e2e" + supportedPlugin.getName() + "&f!"));
+                } catch (RuntimeException | LinkageError exception) {
+                    plugin.getLogger().log(Level.WARNING,
+                            "Could not enable optional " + supportedPlugin.getName() + " integration.", exception);
+                }
             }
         }
     }
