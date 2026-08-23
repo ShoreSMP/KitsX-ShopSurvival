@@ -48,7 +48,7 @@ public class KitRoomUtil implements KitRoomAPI {
     }
 
     @Override
-    public void save(Player player, String category) {
+    public synchronized void save(Player player, String category) {
         if (exists(category)) {
             delete(category);
         }
@@ -69,7 +69,7 @@ public class KitRoomUtil implements KitRoomAPI {
     }
 
     @Override
-    public void load(GuiBuilder inventory, String category) {
+    public synchronized void load(GuiBuilder inventory, String category) {
         for (int i = 0; i < 45; i++) {
             inventory.setItem(i, new ItemStack(Material.AIR));
             ItemStack item = configManager.getConfig("data/kitroom.yml").getItemStack("categories." + category + "." + i);
@@ -80,7 +80,7 @@ public class KitRoomUtil implements KitRoomAPI {
     }
 
     @Override
-    public void delete(String category) {
+    public synchronized void delete(String category) {
         if (exists(category)) {
             configManager.set("data/kitroom.yml", "categories." + category, null);
         }
@@ -93,7 +93,7 @@ public class KitRoomUtil implements KitRoomAPI {
     }
 
     @Override
-    public boolean exists(String category) {
+    public synchronized boolean exists(String category) {
         return configManager.contains("data/kitroom.yml", "categories." + category + ".");
     }
 }

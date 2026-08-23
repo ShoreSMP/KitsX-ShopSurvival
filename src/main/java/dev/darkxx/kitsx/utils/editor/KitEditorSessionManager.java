@@ -22,8 +22,8 @@
 package dev.darkxx.kitsx.utils.editor;
 
 import dev.darkxx.kitsx.utils.InventorySnapshot;
+import dev.darkxx.kitsx.KitsX;
 import dev.darkxx.utils.menu.xmenu.GuiBuilder;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -34,8 +34,6 @@ import org.bukkit.inventory.PlayerInventory;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -102,15 +100,11 @@ public final class KitEditorSessionManager {
     }
 
     public static void endAllSessions() {
-        List<UUID> sessionIds = new ArrayList<>(SESSIONS.keySet());
-        for (UUID sessionId : sessionIds) {
-            Player player = Bukkit.getPlayer(sessionId);
-            if (player != null) {
+        KitsX.getInstance().getShoreScheduler().forEachOnlinePlayer(player -> {
+            if (SESSIONS.containsKey(player.getUniqueId())) {
                 endSession(player);
-            } else {
-                SESSIONS.remove(sessionId);
             }
-        }
+        });
     }
 
     public static void updateGui(@NotNull Player player, @NotNull GuiBuilder inventory, @NotNull String guiTitle) {

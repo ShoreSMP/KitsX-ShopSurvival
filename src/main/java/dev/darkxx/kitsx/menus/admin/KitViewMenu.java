@@ -26,14 +26,13 @@ import dev.darkxx.kitsx.utils.config.MenuConfig;
 import dev.darkxx.utils.menu.xmenu.GuiBuilder;
 import dev.darkxx.utils.menu.xmenu.ItemBuilderGUI;
 import dev.darkxx.utils.text.color.ColorizeText;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
+import java.util.UUID;
 
 public class KitViewMenu extends GuiBuilder {
 
@@ -72,19 +71,14 @@ public class KitViewMenu extends GuiBuilder {
     }
 
     public static void kit(Player executor, String targetPlayerName, String kitName) {
-        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetPlayerName);
-        Player targetPlayer = Bukkit.getPlayerExact(targetPlayerName);
-        if (targetPlayer == null) {
-            return;
-        }
-
-        if (!offlinePlayer.isOnline()) {
+        UUID targetPlayerId = PLUGIN.findOnlinePlayerIdExact(targetPlayerName);
+        if (targetPlayerId == null) {
             executor.sendMessage(ColorizeText.mm("<&#ffa6a6>Player " + targetPlayerName + " is not online."));
             return;
         }
 
         GuiBuilder inventory = new GuiBuilder(45, targetPlayerName + " - " + kitName);
-        KitsX.getKitUtil().set(targetPlayer, kitName, inventory);
+        KitsX.getKitUtil().set(targetPlayerId, kitName, inventory);
 
         for (int i = 1; i <= 3; i++) {
             int slot = i + 40;

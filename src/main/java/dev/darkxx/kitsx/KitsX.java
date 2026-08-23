@@ -38,9 +38,13 @@ import dev.darkxx.utils.server.Servers;
 import dev.darkxx.utils.text.color.ColorizeText;
 import lombok.Getter;
 import me.notzorba.shorescheduler.ShoreScheduler;
-import org.bukkit.Bukkit;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
+
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class KitsX extends PluginWrapper {
 
@@ -56,12 +60,14 @@ public final class KitsX extends PluginWrapper {
     private static AutoRekitUtil autoRekitUtil;
     @Getter
     private ShoreScheduler shoreScheduler;
+    private final Map<UUID, String> onlinePlayerNames = new ConcurrentHashMap<>();
     private Metrics metrics;
 
     @Override
     protected void start() {
         instance = this;
         shoreScheduler = new ShoreScheduler(this);
+        shoreScheduler.forEachOnlinePlayer(this::trackOnlinePlayer);
         Utils.init(this, false);
         GuiManager.register(this);
         saveDefaultConfig();
@@ -100,6 +106,7 @@ public final class KitsX extends PluginWrapper {
         new PremadeKitCommand(this);
 
         Servers.server().getPluginManager().registerEvents(new KitEditorListener(), this);
+        Servers.server().getPluginManager().registerEvents(new OnlinePlayerCacheListener(), this);
         KitEditorListener.registerExternalGuards(this);
 
         metrics = new Metrics(this, 22161);
@@ -115,17 +122,32 @@ public final class KitsX extends PluginWrapper {
             metrics.shutdown();
             metrics = null;
         }
-        KitEditorSessionManager.endAllSessions();
         getKitUtil().saveAll();
         getPremadeKitUtil().saveAll();
     }
 
     public void broadcast(String message) {
-        shoreScheduler.global(() -> {
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                shoreScheduler.entity(player, () -> player.sendMessage(message), null);
-            }
-        });
+        shoreScheduler.forEachOnlinePlayer(player -> player.sendMessage(message));
+    }
+
+    public void trackOnlinePlayer(Player player) {
+        onlinePlayerNames.put(player.getUniqueId(), player.getName());
+    }
+
+    public void removeOnlinePlayer(UUID playerId) {
+        onlinePlayerNames.remove(playerId);
+    }
+
+    public Set<String> getOnlinePlayerNames() {
+        return Set.copyOf(onlinePlayerNames.values());
+    }
+
+    public UUID findOnlinePlayerIdExact(String playerName) {
+        return onlinePlayerNames.entrySet().stream()
+                .filter(entry -> entry.getValue().equalsIgnoreCase(playerName))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse(null);
     }
 
     private boolean rekit() {

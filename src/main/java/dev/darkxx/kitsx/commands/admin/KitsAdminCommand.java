@@ -33,6 +33,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -75,7 +76,7 @@ public class KitsAdminCommand extends XyrisCommand<KitsX> {
                     sender.sendMessage(ColorizeText.hex("&#ffa6a6Usage: /kitsadmin view <player>"));
                     return true;
                 }
-                KitViewMenu.openKitSelectMenu(executor, viewTarget.getName());
+                KitViewMenu.openKitSelectMenu(executor, args[1]);
                 break;
             case "clear":
                 if (args.length < 2) {
@@ -92,7 +93,7 @@ public class KitsAdminCommand extends XyrisCommand<KitsX> {
                     return true;
                 }
                 String kitName = Stream.of(args).skip(2).collect(Collectors.joining(" "));
-                KitsX.getKitUtil().delete((Player) clearTarget, kitName);
+                KitsX.getKitUtil().delete(clearTarget.getUniqueId(), kitName);
                 executor.sendMessage(ColorizeText.hex("&#7cff6e" + kitName + " has been cleared for player " + clearTarget.getName() + "."));
                 break;
             case "cooldown":
@@ -107,9 +108,7 @@ public class KitsAdminCommand extends XyrisCommand<KitsX> {
     @Override
     public @NotNull List<String> onTabComplete(CommandSender sender, Command command, String alias, String @NotNull [] args) {
         if (args.length == 2 && (args[0].equalsIgnoreCase("view") || args[0].equalsIgnoreCase("clear"))) {
-            return Bukkit.getOnlinePlayers().stream()
-                    .map(Player::getName)
-                    .collect(Collectors.toList());
+            return List.copyOf(KitsX.getInstance().getOnlinePlayerNames());
         } else if (args.length == 3 && args[0].equalsIgnoreCase("clear")) {
             int numKits = KitsX.getInstance().getConfig().getInt("kits");
             return IntStream.rangeClosed(1, numKits)
@@ -118,7 +117,7 @@ public class KitsAdminCommand extends XyrisCommand<KitsX> {
         } else if (args.length == 2 && args[0].equalsIgnoreCase("cooldown")) {
             return List.of("get", "set", "reset");
         } else if (args.length == 3 && args[0].equalsIgnoreCase("cooldown") && args[1].equalsIgnoreCase("reset")) {
-            return Stream.concat(Bukkit.getOnlinePlayers().stream().map(Player::getName), Stream.of("all"))
+            return Stream.concat(KitsX.getInstance().getOnlinePlayerNames().stream(), Stream.of("all"))
                     .collect(Collectors.toList());
         }
         return super.onTabComplete(sender, command, alias, args);
@@ -132,7 +131,7 @@ public class KitsAdminCommand extends XyrisCommand<KitsX> {
 
         switch (args[1].toLowerCase()) {
             case "get": {
-                String raw = KitsX.getInstance().getConfig().getString("cooldowns.kit_load", "0");
+                String raw = KitsX.getKitUtil().getConfiguredKitLoadCooldown();
                 long millis = KitsX.getKitUtil().parseDurationMillis(raw == null ? "0" : raw);
                 String pretty = KitsX.getKitUtil().formatDuration(Math.max(millis, 1000));
                 executor.sendMessage(ColorizeText.hex("&#7cff6eCooldown: &#ffffff" + (raw == null ? "0" : raw) + " &#7cff6e(roughly " + pretty + ")"));
@@ -149,10 +148,11 @@ public class KitsAdminCommand extends XyrisCommand<KitsX> {
                     executor.sendMessage(ColorizeText.hex("&#ffa6a6Invalid duration. Use formats like 30s, 5m, 1h30m, 1d, or 0 to disable."));
                     return;
                 }
-                KitsX plugin = KitsX.getInstance();
-                plugin.getConfig().set("cooldowns.kit_load", duration);
-                plugin.saveConfig();
-                executor.sendMessage(ColorizeText.hex("&#7cff6eKit load cooldown set to &#ffffff" + duration));
+                if (KitsX.getKitUtil().setConfiguredKitLoadCooldown(duration)) {
+                    executor.sendMessage(ColorizeText.hex("&#7cff6eKit load cooldown set to &#ffffff" + duration));
+                } else {
+                    executor.sendMessage(ColorizeText.hex("&#ffa6a6Could not save the kit load cooldown. Check the server log."));
+                }
                 break;
             }
             case "reset": {
@@ -168,13 +168,13 @@ public class KitsAdminCommand extends XyrisCommand<KitsX> {
                     return;
                 }
 
-                Player player = Bukkit.getPlayerExact(target);
-                if (player == null) {
+                UUID playerId = KitsX.getInstance().findOnlinePlayerIdExact(target);
+                if (playerId == null) {
                     executor.sendMessage(ColorizeText.hex("&#ffa6a6Player must be online to reset their cooldown."));
                     return;
                 }
-                KitsX.getKitUtil().resetCooldown(player.getUniqueId());
-                executor.sendMessage(ColorizeText.hex("&#7cff6eReset kit load cooldown for &#ffffff" + player.getName() + "&#7cff6e."));
+                KitsX.getKitUtil().resetCooldown(playerId);
+                executor.sendMessage(ColorizeText.hex("&#7cff6eReset kit load cooldown for &#ffffff" + target + "&#7cff6e."));
                 break;
             }
             default:

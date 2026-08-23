@@ -308,7 +308,11 @@ public final class KitEditorListener implements Listener {
         Player attacker = resolveResponsiblePlayer(event.getDamager());
         if (attacker != null && KitEditorSessionManager.isEditing(attacker)) {
             event.setCancelled(true);
-            sendEditingBlockedMessage(attacker);
+            KitsX.getInstance().getShoreScheduler().entity(
+                    attacker,
+                    () -> sendEditingBlockedMessage(attacker),
+                    null
+            );
         }
     }
 

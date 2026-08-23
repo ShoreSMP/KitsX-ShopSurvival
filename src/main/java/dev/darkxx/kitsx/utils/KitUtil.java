@@ -32,11 +32,14 @@ import dev.darkxx.utils.menu.xmenu.GuiBuilder;
 import dev.darkxx.utils.text.color.ColorizeText;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -47,9 +50,12 @@ public class KitUtil implements KitsAPI {
     private final Logger logger = Logger.getLogger(KitUtil.class.getName());
     private final Map<UUID, Long> lastKitLoadBroadcastAt = new ConcurrentHashMap<>();
     private final Map<UUID, Long> kitLoadCooldowns = new ConcurrentHashMap<>();
+    private volatile String configuredKitLoadCooldown;
 
     public KitUtil(ConfigManager configManager) {
         KitUtil.configManager = configManager;
+        String configured = KitsX.getInstance().getConfig().getString("cooldowns.kit_load", "0");
+        configuredKitLoadCooldown = configured == null ? "0" : configured;
     }
 
     public static void of(JavaPlugin plugin) {
@@ -169,8 +175,12 @@ public class KitUtil implements KitsAPI {
         return false;
     }
 
-    private synchronized InventorySnapshot getSnapshot(@NotNull Player player, @NotNull String kitName) {
-        String playerName = player.getUniqueId().toString();
+    private InventorySnapshot getSnapshot(@NotNull Player player, @NotNull String kitName) {
+        return getSnapshot(player.getUniqueId(), kitName);
+    }
+
+    private synchronized InventorySnapshot getSnapshot(@NotNull UUID playerId, @NotNull String kitName) {
+        String playerName = playerId.toString();
         if (!configManager.contains("data/kits.yml", playerName + "." + kitName)) {
             return null;
         }
@@ -239,8 +249,26 @@ public class KitUtil implements KitsAPI {
         kitLoadCooldowns.clear();
     }
 
+    public String getConfiguredKitLoadCooldown() {
+        return configuredKitLoadCooldown;
+    }
+
+    public synchronized boolean setConfiguredKitLoadCooldown(String value) {
+        File configFile = new File(KitsX.getInstance().getDataFolder(), "config.yml");
+        YamlConfiguration diskConfig = YamlConfiguration.loadConfiguration(configFile);
+        diskConfig.set("cooldowns.kit_load", value);
+        try {
+            diskConfig.save(configFile);
+            configuredKitLoadCooldown = value;
+            return true;
+        } catch (IOException exception) {
+            logger.log(Level.SEVERE, "Failed to save kit load cooldown", exception);
+            return false;
+        }
+    }
+
     private long resolveKitLoadCooldownMillis() {
-        String raw = KitsX.getInstance().getConfig().getString("cooldowns.kit_load", "0");
+        String raw = configuredKitLoadCooldown;
         if (raw == null || raw.trim().isEmpty()) {
             long legacySeconds = KitsX.getInstance().getConfig().getLong("cooldowns.kit_load_seconds", 0);
             return legacySeconds <= 0 ? 0 : legacySeconds * 1000L;
@@ -328,7 +356,11 @@ public class KitUtil implements KitsAPI {
 
     @Override
     public void set(@NotNull Player player, String kitName, GuiBuilder inventory) {
-        InventorySnapshot snapshot = getSnapshot(player, kitName);
+        set(player.getUniqueId(), kitName, inventory);
+    }
+
+    public void set(@NotNull UUID playerId, String kitName, GuiBuilder inventory) {
+        InventorySnapshot snapshot = getSnapshot(playerId, kitName);
         if (snapshot != null) {
             snapshot.applyToGui(inventory);
         }
@@ -348,8 +380,12 @@ public class KitUtil implements KitsAPI {
     }
 
     @Override
-    public synchronized void delete(@NotNull Player player, String kitName) {
-        String playerName = player.getUniqueId().toString();
+    public void delete(@NotNull Player player, String kitName) {
+        delete(player.getUniqueId(), kitName);
+    }
+
+    public synchronized void delete(@NotNull UUID playerId, String kitName) {
+        String playerName = playerId.toString();
 
         configManager.set("data/kits.yml", playerName + "." + kitName, null);
 

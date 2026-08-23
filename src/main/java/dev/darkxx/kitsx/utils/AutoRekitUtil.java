@@ -45,7 +45,7 @@ public class AutoRekitUtil implements AutoRekitAPI {
     }
 
     @Override
-    public void set(@NotNull Player player, Boolean enabled, String kitName) {
+    public synchronized void set(@NotNull Player player, Boolean enabled, String kitName) {
         String playerName = player.getUniqueId().toString();
         configManager.set("data/autorekit.yml", playerName + ".auto_rekit.enabled", enabled);
         configManager.set("data/autorekit.yml", playerName + ".auto_rekit.kit", kitName);
@@ -53,14 +53,14 @@ public class AutoRekitUtil implements AutoRekitAPI {
     }
 
     @Override
-    public void setKit(@NotNull Player player, String kitName) {
+    public synchronized void setKit(@NotNull Player player, String kitName) {
         String playerName = player.getUniqueId().toString();
         configManager.set("data/autorekit.yml", playerName + ".auto_rekit.kit", kitName);
         save();
     }
 
     @Override
-    public void toggle(@NotNull Player player) {
+    public synchronized void toggle(@NotNull Player player) {
         String playerName = player.getUniqueId().toString();
         boolean currentSetting = configManager.getConfig("data/autorekit.yml").getBoolean(playerName + ".auto_rekit.enabled");
         configManager.set("data/autorekit.yml", playerName + ".auto_rekit.enabled", !currentSetting);
@@ -68,31 +68,31 @@ public class AutoRekitUtil implements AutoRekitAPI {
     }
 
     @Override
-    public boolean get(@NotNull Player player) {
+    public synchronized boolean get(@NotNull Player player) {
         String playerName = player.getUniqueId().toString();
         return configManager.getConfig("data/autorekit.yml").getBoolean(playerName + ".auto_rekit.enabled", false);
     }
 
     @Override
-    public String getKit(@NotNull Player player) {
+    public synchronized String getKit(@NotNull Player player) {
         String playerName = player.getUniqueId().toString();
         return configManager.getConfig("data/autorekit.yml").getString(playerName + ".auto_rekit.kit", "Kit 1");
     }
 
     @Override
-    public boolean isEnabled(@NotNull Player player) {
+    public synchronized boolean isEnabled(@NotNull Player player) {
         String playerName = player.getUniqueId().toString();
         return configManager.getConfig("data/autorekit.yml").getBoolean(playerName + ".auto_rekit.enabled", false);
     }
 
     @Override
-    public boolean hasAutoRekit(@NotNull Player player) {
+    public synchronized boolean hasAutoRekit(@NotNull Player player) {
         String playerName = player.getUniqueId().toString();
         return configManager.contains("data/autorekit.yml", playerName + ".auto_rekit");
     }
 
     @Override
-    public String status(Player player) {
+    public synchronized String status(Player player) {
         boolean autoRekitEnabled = get(player);
         String enabled = CONFIG.getConfig().getString("auto_rekit.placeholders.enabled", "&#7cff6eEnabled");
         String disabled = CONFIG.getConfig().getString("auto_rekit.placeholders.disabled", "&#ffa6a6Disabled");

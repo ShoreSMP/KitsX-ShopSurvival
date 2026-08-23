@@ -61,9 +61,11 @@ public class AutoRekitListener implements Listener {
         Player victim = e.getEntity();
         Player attacker = victim.getKiller();
         if (attacker != null) {
-            if (!KitEditorSessionManager.isEditing(attacker) && KitsX.getAutoRekitUtil().isEnabled(attacker)) {
-                load(attacker);
-            }
+            KitsX.getInstance().getShoreScheduler().entity(attacker, () -> {
+                if (!KitEditorSessionManager.isEditing(attacker) && KitsX.getAutoRekitUtil().isEnabled(attacker)) {
+                    load(attacker);
+                }
+            }, null);
         }
     }
 
