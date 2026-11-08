@@ -10,6 +10,14 @@ description = "KitsX"
 java.sourceCompatibility = JavaVersion.VERSION_21
 java.targetCompatibility = JavaVersion.VERSION_21
 
+// The version plus the commit the jar was built from, e.g. 1.0.3-a07b227, with -dirty when the build had
+// uncommitted changes (untracked files don't count). Outside a git checkout the commit is "unknown".
+// Only plugin.yml and the plugin jar use it; the published Maven version stays as above.
+val pluginVersion: String = "$version-" + providers.exec {
+    commandLine("git", "describe", "--always", "--dirty", "--abbrev=7", "--match=no-tag-matches-this")
+    isIgnoreExitValue = true
+}.standardOutput.asText.get().trim().ifEmpty { "unknown" }
+
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(24))
@@ -39,6 +47,11 @@ tasks.build {
     dependsOn(tasks.shadowJar)
 }
 
+// The plugin jar, e.g. KitsX-1.0.3-a07b227-all.jar
+tasks.shadowJar {
+    archiveVersion.set(pluginVersion)
+}
+
 tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
     options.release.set(21)
@@ -50,9 +63,9 @@ tasks.withType<Javadoc> {
 }
 
 tasks.processResources {
-    inputs.property("version", project.version)
+    inputs.property("version", pluginVersion)
     filesMatching("plugin.yml") {
-        expand(mapOf("version" to project.version))
+        expand(mapOf("version" to pluginVersion))
     }
 }
 
