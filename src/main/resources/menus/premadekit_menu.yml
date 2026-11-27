@@ -18,12 +18,12 @@
 
 # self-explanatory, no need for any external comments
 premade_kit:
-  title: "Premade Kit"
+  title: '&8Kits | Kit Preview'
   size: 54
 
   filter:
-    material: BLACK_STAINED_GLASS_PANE
-    name: " "
+    material: GRAY_STAINED_GLASS_PANE
+    name: ' '
     slots: [ 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52 ]
     flags:
       _ HIDE_ATTRIBUTES
@@ -31,7 +31,7 @@ premade_kit:
 
   back:
     material: RED_STAINED_GLASS_PANE
-    name: "&#ffa6a6Back"
+    name: '&#FF0048&lBACK'
     slot: 53
     flags:
       - HIDE_ATTRIBUTES

@@ -54,7 +54,7 @@ public class AutoRekitMenu extends GuiBuilder {
     }
 
     public static @NotNull GuiBuilder openAutoRekitMenu(Player player) {
-        GuiBuilder inventory = new GuiBuilder(CONFIG.getConfig().getInt("auto_rekit.size", 27), CONFIG.getConfig().getString("auto_rekit.title", "Auto Rekit"));
+        GuiBuilder inventory = new GuiBuilder(CONFIG.getConfig().getInt("auto_rekit.size", 27), ColorizeText.hex(CONFIG.getConfig().getString("auto_rekit.title", "Auto Rekit")));
 
         addFilterItems(inventory);
         addToggleAutoRekitItem(inventory, player);

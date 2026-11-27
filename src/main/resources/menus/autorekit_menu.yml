@@ -18,17 +18,17 @@
 
 # self-explanatory, no need for any external comments
 auto_rekit:
-  title: "Auto Rekit"
+  title: '&8Kits | Auto Rekit'
   size: 45
 
   placeholders:
-    enabled: "&#7cff6eEnabled"
-    disabled: "&#ff2e2eDisabled"
+    enabled: "&#7DFFA8Enabled"
+    disabled: "&#FF0048Disabled"
 
   filter:
     enable: true
-    material: BLACK_STAINED_GLASS_PANE
-    name: " "
+    material: GRAY_STAINED_GLASS_PANE
+    name: ' '
     slots: [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44 ]
     flags:
       - HIDE_ATTRIBUTES
@@ -36,19 +36,22 @@ auto_rekit:
 
   toggle_auto_rekit:
     material: NETHERITE_SWORD
-    name: "&#ff2e2eAuto Rekit"
+    name: '&#FF2E2E&lAUTO REKIT'
     slot: 13
     lore:
-      - " "
-      - "&fStatus: %status%"
-      - " "
+      - '&8Kit Settings'
+      - ''
+      - '&bInformation:'
+      - '&fStatus: %status%'
+      - ''
+      - '&e▶ &e&l&nCLICK&e To Toggle'
     flags:
       - HIDE_ATTRIBUTES
       - HIDE_ENCHANTS
 
   kits:
     material: END_CRYSTAL
-    name: "&#ff2e2eKit %kit%"
+    name: '&#FF2E2E&lKIT %kit%'
     slots: [ 10, 19, 28, 16, 25, 34, 31 ]
     lore: [ ]
     flags:

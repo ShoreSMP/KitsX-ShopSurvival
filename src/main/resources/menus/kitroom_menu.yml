@@ -18,19 +18,19 @@
 
 # self-explanatory, no need for any external comments
 kit_room:
-  title: "Virtual Kit Room"
+  title: '&8Kits | Virtual Kit Room'
 
   items:
     filter:
-      material: BLACK_STAINED_GLASS_PANE
-      name: "&7 "
+      material: GRAY_STAINED_GLASS_PANE
+      name: ' '
       lore: [ ]
       slots: [ 53 ]
       enchanted: false
 
     crystalpvp:
       material: NETHERITE_SWORD
-      name: "&#ff2e2eCrystal PvP"
+      name: '&#FF2E2E&lCRYSTAL PVP'
       lore: [ ]
       slot: 47
       enchanted: true
@@ -38,7 +38,7 @@ kit_room:
 
     potions:
       material: BREWING_STAND
-      name: "&#ff2e2ePotions"
+      name: '&#FF2E2E&lPOTIONS'
       lore: [ ]
       slot: 48
       enchanted: false
@@ -46,7 +46,7 @@ kit_room:
 
     bowsArrows:
       material: SPECTRAL_ARROW
-      name: "&#ff2e2eBows & Arrows"
+      name: '&#FF2E2E&lBOWS & ARROWS'
       lore: [ ]
       slot: 50
       enchanted: false
@@ -54,7 +54,7 @@ kit_room:
 
     misc:
       material: ENDER_PEARL
-      name: "&#ff2e2eMisc"
+      name: '&#FF2E2E&lMISC'
       lore: [ ]
       slot: 51
       enchanted: false
@@ -62,22 +62,22 @@ kit_room:
 
     reset:
       material: RED_DYE
-      name: "&#ff2e2eReset Kit"
+      name: '&#FF0048&lRESET KIT'
       lore:
-        - "&7Clear every item from this kit"
+        - '&fClear every item from this kit.'
       slot: 52
       enchanted: false
 
     back:
       material: RED_STAINED_GLASS_PANE
-      name: "&#ffa6a6Back"
+      name: '&#FF0048&lBACK'
       lore: [ ]
       slot: 49
       enchanted: false
 
     refill:
       material: BARREL
-      name: "&#ffa6a6Refill"
+      name: '&#7DFFA8&lREFILL'
       lore: [ ]
       slot: 45
       enchanted: false
