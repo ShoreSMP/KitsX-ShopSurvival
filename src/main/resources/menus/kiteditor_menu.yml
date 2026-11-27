@@ -19,11 +19,11 @@
 # self-explanatory, no need for any external comments
 kit_editor:
   size: 54
-  title: "Editing %kitName%"
+  title: '&8Kits | Editing %kitName%'
 
   filter:
-    material: BLACK_STAINED_GLASS_PANE
-    name: " "
+    material: GRAY_STAINED_GLASS_PANE
+    name: ' '
     slots: [ 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53 ]
     flags:
       - HIDE_ATTRIBUTES
@@ -31,7 +31,7 @@ kit_editor:
 
   save:
     material: LIME_DYE
-    name: "&aSave"
+    name: '&#7DFFA8&lSAVE'
     slot: 46
     lore: [ ]
     flags:
@@ -40,7 +40,7 @@ kit_editor:
 
   reset:
     material: RED_DYE
-    name: "&cReset"
+    name: '&#FF0048&lRESET'
     slot: 48
     lore: [ ]
     flags:
@@ -49,7 +49,7 @@ kit_editor:
 
   importInventory:
     material: CHEST
-    name: "&aImport Inventory"
+    name: '&#FF2E2E&lIMPORT INVENTORY'
     slot: 50
     lore: [ ]
     flags:
@@ -58,7 +58,7 @@ kit_editor:
 
   premadeKit:
     material: NETHERITE_CHESTPLATE
-    name: "&9Premade Kit"
+    name: '&#FF2E2E&lPREMADE KIT'
     slot: 52
     lore: [ ]
     flags:
@@ -67,7 +67,7 @@ kit_editor:
 
   back:
     material: RED_STAINED_GLASS_PANE
-    name: "&#ffa6a6Back"
+    name: '&#FF0048&lBACK'
     slot: 49
     lore: [ ]
     flags:

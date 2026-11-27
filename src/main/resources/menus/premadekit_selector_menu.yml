@@ -18,12 +18,12 @@
 
 # self-explanatory, no need for any external comments
 premade_kit:
-  title: "Premade Kits"
+  title: '&8Kits | Premade Kits'
   size: 54
 
   filter:
-    material: BLACK_STAINED_GLASS_PANE
-    name: " "
+    material: GRAY_STAINED_GLASS_PANE
+    name: ' '
     slots: [ 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52 ]
     flags:
       - HIDE_ATTRIBUTES
@@ -31,7 +31,7 @@ premade_kit:
 
   back:
     material: RED_STAINED_GLASS_PANE
-    name: "&#ffa6a6Back"
+    name: '&#FF0048&lBACK'
     slot: 49
     flags:
       - HIDE_ATTRIBUTES
@@ -40,49 +40,59 @@ premade_kit:
     SMP:
       material: DIAMOND_SWORD
       slot: 19
-      name: "&aSMP"
+      name: '&#FF2E2E&lSMP'
       lore:
-        - "&7Left click to load"
-        - "&7Right click to preview"
+        - '&8Premade Kit'
+        - ''
+        - '&e▶ &e&l&nLEFT CLICK&e To Load'
+        - '&e▶ &e&l&nRIGHT CLICK&e To Preview'
       flags:
         - HIDE_ATTRIBUTES
 
     NetheritePot:
       material: NETHERITE_HELMET
       slot: 20
-      name: "&aNetherite Pot"
+      name: '&#FF2E2E&lNETHERITE POT'
       lore:
-        - "&7Left click to load"
-        - "&7Right click to preview"
+        - '&8Premade Kit'
+        - ''
+        - '&e▶ &e&l&nLEFT CLICK&e To Load'
+        - '&e▶ &e&l&nRIGHT CLICK&e To Preview'
       flags:
         - HIDE_ATTRIBUTES
 
     Carts:
       material: MINECART
       slot: 21
-      name: "&aCarts"
+      name: '&#FF2E2E&lCARTS'
       lore:
-        - "&7Left click to load"
-        - "&7Right click to preview"
+        - '&8Premade Kit'
+        - ''
+        - '&e▶ &e&l&nLEFT CLICK&e To Load'
+        - '&e▶ &e&l&nRIGHT CLICK&e To Preview'
       flags:
         - HIDE_ATTRIBUTES
 
     Mace:
       material: IRON_AXE
       slot: 22
-      name: "&aMace"
+      name: '&#FF2E2E&lMACE'
       lore:
-        - "&7Left click to load"
-        - "&7Right click to preview"
+        - '&8Premade Kit'
+        - ''
+        - '&e▶ &e&l&nLEFT CLICK&e To Load'
+        - '&e▶ &e&l&nRIGHT CLICK&e To Preview'
       flags:
         - HIDE_ATTRIBUTES
 
     UHC:
       material: GOLDEN_APPLE
       slot: 23
-      name: "&aUHC"
+      name: '&#FF2E2E&lUHC'
       lore:
-        - "&7Left click to load"
-        - "&7Right click to preview"
+        - '&8Premade Kit'
+        - ''
+        - '&e▶ &e&l&nLEFT CLICK&e To Load'
+        - '&e▶ &e&l&nRIGHT CLICK&e To Preview'
       flags:
         - HIDE_ATTRIBUTES

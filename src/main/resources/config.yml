@@ -15,31 +15,31 @@ cooldowns:
 broadcast:
   kit_load: true
   kit_load_message:
-    - "&#7cff6e%player% loaded %kit%."
+    - '&f&#FFD700%player%&f &#7DFFA8loaded&f &#FFD700%kit%&f.'
   kit_load_message_delay: 20 # In ticks (20 ticks = 1 second)
   kitroom_open: true
-  kitroom_open_message: "&#7cff6e%player% opened the Virtual Kit Room."
+  kitroom_open_message: '&f&#FFD700%player%&f opened the Virtual Kit Room.'
   kitroom_open_message_delay: 20 # In ticks (20 ticks = 1 second)
   premadekit_load: true
-  premadekit_load_message: "&#7cff6e%player% loaded the premade kit."
+  premadekit_load_message: '&f&#FFD700%player%&f &#7DFFA8loaded&f the premade kit.'
   premadekit_load_message_delay: 20 # In ticks (20 ticks = 1 second)
 
 messages:
-  no_permission: "&#ffa6a6You do not have permission to use this command."
-  blacklisted_region: "&#ffa6a6You cannot use this command here."
-  kit_saved: "&#7cff6e%kit% saved successfully!"
-  kit_loaded: "&#7cff6e%kit% loaded successfully!"
-  kit_load_cooldown: "&#ffa6a6Please wait %time% before loading another kit."
-  editor_region_required: "&#ffa6a6You can only edit kits in the kit editor region."
-  kit_edit_started: "&#7cff6eEditing %kit%."
-  kit_edit_save_hint: "&#f8ff9cUse /customkit for items, /%kitcmd% save to save, or /kitcancel to cancel."
-  kit_edit_wrong_kit: "&#ffa6a6You are editing %kit%. Use /%kitcmd% save for that kit."
-  premade_kit_saved: "&#7cff6ePremade kit saved successfully!"
-  premade_kit_loaded: "&#7cff6ePremade kit loaded successfully!"
-  premade_kit_empty: "&#ffa6a6The premade kit is empty."
-  auto_rekit_kit_selected: "&#7cff6eAuto Rekit kit set to %kit%."
+  no_permission: '&fYou do &#FF0048not&f have permission to use this command.'
+  blacklisted_region: '&fYou &#FF0048cannot&f use this command here.'
+  kit_saved: '&f&#FFD700%kit%&f &#7DFFA8saved&f successfully!'
+  kit_loaded: '&f&#FFD700%kit%&f &#7DFFA8loaded&f successfully!'
+  kit_load_cooldown: '&fPlease wait &#FFD700%time%&f before loading another kit.'
+  editor_region_required: '&fYou can only edit kits in the kit editor region.'
+  kit_edit_started: '&fEditing &#FFD700%kit%&f.'
+  kit_edit_save_hint: '&fUse &#FFD700/customkit&f for items, &#FFD700/%kitcmd% save&f to save, or &#FFD700/kitcancel&f to cancel.'
+  kit_edit_wrong_kit: '&fYou are editing &#FFD700%kit%&f. Use &#FFD700/%kitcmd% save&f for that kit.'
+  premade_kit_saved: '&fPremade kit &#7DFFA8saved&f successfully!'
+  premade_kit_loaded: '&fPremade kit &#7DFFA8loaded&f successfully!'
+  premade_kit_empty: '&fThe premade kit is &#FF0048empty&f.'
+  auto_rekit_kit_selected: '&fAuto Rekit kit set to &#FFD700%kit%&f.'
   send_auto_rekit_message: true
-  auto_rekit_message: "&#7cff6eAutomatically rekitted for you. Use /autorekit to toggle or edit the kit."
+  auto_rekit_message: '&fAutomatically rekitted for you. Use &#FFD700/autorekit&f to toggle or edit the kit.'
 
 blacklisted_regions:
   - "arena1"
